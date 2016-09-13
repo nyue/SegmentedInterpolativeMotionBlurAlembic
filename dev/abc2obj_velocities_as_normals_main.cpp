@@ -25,10 +25,12 @@ struct WavefrontMeshData
 typedef std::vector<WavefrontMeshData> WavefrontMeshDataContainer;
 typedef std::vector<std::string> StringContainer;
 
-void export_polymesh_as_wavefront_obj(Alembic::AbcGeom::IPolyMesh& pmesh,
-									  const std::string& i_wavefront_filename)
+void export_polymesh_as_wavefront_obj(Alembic::AbcGeom::IPolyMesh&         pmesh,
+									  const Alembic::Abc::ISampleSelector& i_sample_selector,
+									  const std::string&                   i_wavefront_filename)
 {
     Alembic::AbcGeom::IPolyMeshSchema::Sample samp;
+
     if ( pmesh.getSchema().getNumSamples() > 0 )
     {
 
@@ -38,7 +40,7 @@ void export_polymesh_as_wavefront_obj(Alembic::AbcGeom::IPolyMesh& pmesh,
     	wavefront_file << "# File exported by Nicholas Yue\n";
 
 
-    	pmesh.getSchema().get( samp );
+    	pmesh.getSchema().get( samp, i_sample_selector );
 
     	Alembic::AbcGeom::P3fArraySamplePtr P = samp.getPositions();
     	Alembic::AbcGeom::Int32ArraySamplePtr indices = samp.getFaceIndices();
@@ -122,9 +124,18 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 	    		StringContainer       _concatenated_hierachy_path = i_hierachy_path;
 	    		_concatenated_hierachy_path.push_back(child_name);
 	    		flatten_string_array(_concatenated_hierachy_path, "_", unique_object_path);
-	    		std::cout << boost::format(" of type PolyMesh, unique_object_path : '%1%'") % unique_object_path << std::endl;
-	    		std::string wavefront_filename = (boost::format("%1%.obj") % unique_object_path).str();
-	    		export_polymesh_as_wavefront_obj(mesh,wavefront_filename);
+
+
+	    	    size_t num_samples = mesh.getSchema().getNumSamples();
+	    	    // std::cout << boost::format("num_samples = %1%") % num_samples << std::endl;
+
+	    	    for (Alembic::Abc::index_t sample_index = 0;sample_index<num_samples;++sample_index)
+	    	    {
+	    	    	Alembic::Abc::ISampleSelector iSS(sample_index);
+		    		// std::cout << boost::format(" of type PolyMesh, unique_object_path : '%1%'") % unique_object_path << std::endl;
+		    		std::string wavefront_filename = (boost::format("%s.%04d.obj") % unique_object_path % sample_index).str();
+		    		export_polymesh_as_wavefront_obj(mesh,iSS,wavefront_filename);
+	    	    }
 	    	}
 		}
 		else if (Alembic::AbcGeom::IPointsSchema::matches(child_md))
