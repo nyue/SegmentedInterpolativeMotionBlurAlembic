@@ -126,6 +126,14 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 	    		flatten_string_array(_concatenated_hierachy_path, "_", unique_object_path);
 
 
+	    		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = mesh.getSchema().getTimeSampling();
+	    		Alembic::AbcGeom::TimeSamplingType timeType = ts_ptr->getTimeSamplingType();
+	    		Alembic::AbcGeom::chrono_t tpc = timeType.getTimePerCycle();
+	    		Alembic::AbcGeom::chrono_t fps = 1.0/tpc;
+	    		if ( timeType.isUniform() ) {
+	    			double start_frame = ts_ptr->getStoredTimes()[0] * fps;
+		    	    // std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
+	    		}
 	    	    size_t num_samples = mesh.getSchema().getNumSamples();
 	    	    // std::cout << boost::format("num_samples = %1%") % num_samples << std::endl;
 
@@ -187,6 +195,20 @@ int main(int argc, char** argv)
     WavefrontMeshDataContainer meshes;
 	StringContainer       hierachy_path;
 
+	uint32_t NumTimeSamplings = alembic_archive.getNumTimeSamplings();
+	for (uint32_t samplingIndex=0;samplingIndex<NumTimeSamplings;samplingIndex++)
+	{
+		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = alembic_archive.getTimeSampling(samplingIndex);
+		Alembic::AbcGeom::TimeSamplingType ts_type = ts_ptr->getTimeSamplingType();
+	    std::cout << boost::format("ts[%1%] : isAcyclic = %2% isCyclic = %3% isUniform = %4% samples_per_cycle = %5%")
+	    							% samplingIndex
+									% ts_type.isAcyclic()
+									% ts_type.isCyclic()
+									% ts_type.isUniform()
+									% ts_type.getNumSamplesPerCycle()
+									<< std::endl;
+	}
+    std::cout << boost::format("NumTimeSamplings = %1%") % NumTimeSamplings << std::endl;
 	get_mesh_from_hierarchy(alembic_archive.getTop(),hierachy_path,meshes);
 
     return 0;
