@@ -1,3 +1,5 @@
+#include <ai.h>
+
 #include <Alembic/Util/All.h>
 #include <Alembic/AbcCoreAbstract/All.h>
 #include <Alembic/AbcCoreOgawa/All.h>
@@ -16,14 +18,91 @@
 
 #include <OpenEXR/ImathVec.h>
 
+typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<Imath::V3f> V3fContainer;
 struct WavefrontMeshData
 {
 	V3fContainer _positions;
 	V3fContainer _normals;
 };
+struct ArnoldMeshData
+{
+	V3fContainer      _vlist_data;
+	AtUInt32Container _nsides_data;
+	AtUInt32Container _vidxs_data;
+};
 typedef std::vector<WavefrontMeshData> WavefrontMeshDataContainer;
+typedef std::vector<ArnoldMeshData> ArnoldMeshDataContainer;
 typedef std::vector<std::string> StringContainer;
+
+/*!
+ * \param i_relative_shutter_open This can be negative (relative to the current frame)
+ * \param i_relative_shutter_close This can be negative (relative to the current frame)
+ */
+void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_prevous_sample,
+								   const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_current_sample,
+								   const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_next_sample,
+								   float											i_relative_shutter_open,
+								   float											i_relative_shutter_close,
+								   AtByte											i_motion_samples,
+								   ArnoldMeshData&                                  o_arnold_mesh)
+{
+	// Assumes topologically stable
+	Alembic::AbcGeom::Int32ArraySamplePtr indices = i_current_sample->getFaceIndices();
+	Alembic::AbcGeom::Int32ArraySamplePtr counts = i_current_sample->getFaceCounts();
+
+	// Current
+	Alembic::AbcGeom::P3fArraySamplePtr current_P = i_current_sample->getPositions();
+	Alembic::AbcGeom::V3fArraySamplePtr current_v = i_current_sample->getVelocities();
+}
+
+void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh&         pmesh,
+								   Alembic::Abc::index_t                i_requested_index,
+								   const std::string&                   i_arnold_filename)
+{
+	Alembic::Abc::ISampleSelector current_sample_selector(i_requested_index);
+    Alembic::AbcGeom::IPolyMeshSchema::Sample current_sample;
+	pmesh.getSchema().get( current_sample, current_sample_selector );
+
+    size_t num_samples = pmesh.getSchema().getNumSamples();
+    size_t last_sample_index = num_samples - 1;
+    std::cout << boost::format("num_samples = %1%") % num_samples << std::endl;
+    if (i_requested_index < 0 || i_requested_index > (num_samples-1))
+    	return;
+
+    if (i_requested_index == 0)
+    {
+    	// First frame
+    	Alembic::Abc::ISampleSelector next_sample_selector(i_requested_index+1);
+
+        Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
+    	pmesh.getSchema().get( next_sample, next_sample_selector );
+
+
+    }
+    else if (i_requested_index == last_sample_index)
+    {
+    	// Last frame
+    	Alembic::Abc::ISampleSelector previous_sample_selector(i_requested_index-1);
+
+        Alembic::AbcGeom::IPolyMeshSchema::Sample previous_sample;
+    	pmesh.getSchema().get( previous_sample, previous_sample_selector );
+
+    }
+    else
+    {
+    	// Frame between first and last frame
+    	Alembic::Abc::ISampleSelector previous_sample_selector(i_requested_index-1);
+    	Alembic::Abc::ISampleSelector next_sample_selector(i_requested_index+1);
+
+        Alembic::AbcGeom::IPolyMeshSchema::Sample previous_sample;
+    	pmesh.getSchema().get( previous_sample, previous_sample_selector );
+
+        Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
+    	pmesh.getSchema().get( next_sample, next_sample_selector );
+
+    }
+}
 
 void export_polymesh_as_wavefront_obj(Alembic::AbcGeom::IPolyMesh&         pmesh,
 									  const Alembic::Abc::ISampleSelector& i_sample_selector,
@@ -182,20 +261,23 @@ void get_points_positions_velocities(Alembic::AbcGeom::IArchive& i_alembic_archi
 
 int main(int argc, char** argv)
 {
-    if (argc != 3)
+    if (argc != 4)
     {
-        std::cerr << "Usage : " << argv[0] << " <Alembic Archive> <Wavefront OBJ>" << std::endl;
+        std::cerr << "Usage : " << argv[0] << " <Frame (integer)> <Alembic Archive> <Arnold ASS>" << std::endl;
         return 1;
     }
-    std::string alembic_fileName(argv[1]);
-    std::string wavefront_fileName(argv[2]);
+    size_t frame_to_export(atoi(argv[1]));
+    std::string alembic_fileName(argv[2]);
+    std::string ass_fileName(argv[3]);
     Alembic::AbcGeom::IArchive alembic_archive;
     alembic_archive = Alembic::AbcGeom::IArchive( Alembic::AbcCoreOgawa::ReadArchive(), alembic_fileName );
 
     WavefrontMeshDataContainer meshes;
 	StringContainer       hierachy_path;
 
+#ifdef HMMM
 	uint32_t NumTimeSamplings = alembic_archive.getNumTimeSamplings();
+    std::cout << boost::format("NumTimeSamplings = %1%") % NumTimeSamplings << std::endl;
 	for (uint32_t samplingIndex=0;samplingIndex<NumTimeSamplings;samplingIndex++)
 	{
 		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = alembic_archive.getTimeSampling(samplingIndex);
@@ -208,8 +290,8 @@ int main(int argc, char** argv)
 									% ts_type.getNumSamplesPerCycle()
 									<< std::endl;
 	}
-    std::cout << boost::format("NumTimeSamplings = %1%") % NumTimeSamplings << std::endl;
 	get_mesh_from_hierarchy(alembic_archive.getTop(),hierachy_path,meshes);
+#endif // HMMM
 
     return 0;
 }

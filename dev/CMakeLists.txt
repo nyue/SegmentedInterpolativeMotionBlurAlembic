@@ -12,10 +12,19 @@ ADD_EXECUTABLE ( abc2obj_velocities_as_normals
   abc2obj_velocities_as_normals_main.cpp
   )
 
+ADD_EXECUTABLE ( abc2ass
+  abc2ass_main.cpp
+  )
+
 TARGET_LINK_LIBRARIES ( query_alembic
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   )
 
 TARGET_LINK_LIBRARIES ( abc2obj_velocities_as_normals
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
+  )
+
+TARGET_LINK_LIBRARIES ( abc2ass
+  ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
+  ${Arnold_ai_LIBRARY}
   )
