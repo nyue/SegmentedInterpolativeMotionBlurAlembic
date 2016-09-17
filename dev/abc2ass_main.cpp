@@ -18,8 +18,28 @@
 
 #include <OpenEXR/ImathVec.h>
 
+template <typename T> void interpolate(const Imath::Vec3<T>& P1,
+									   const Imath::Vec3<T>& T1,
+									   const Imath::Vec3<T>& P2,
+									   const Imath::Vec3<T>& T2,
+									   T s,
+									   Imath::Vec3<T>& P)
+{
+	T h1 =  2.0*std::pow(s,3.0) - 3.0*std::pow(s,2.0) + 1.0;          // calculate basis function 1
+	T h2 = -2.0*std::pow(s,3.0) + 3.0*std::pow(s,2.0);              // calculate basis function 2
+	T h3 =   std::pow(s,3.0) - 2.0*std::pow(s,2.0) + s;         // calculate basis function 3
+	T h4 =   std::pow(s,3.0) -  std::pow(s,2.0);              // calculate basis function 4
+
+
+	P = h1*P1 +                    // multiply and sum all funtions
+			h2*P2 +                    // together to build the interpolated
+			h3*T1 +                    // point along the curve.
+			h4*T2;
+}
+
 typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<Imath::V3f> V3fContainer;
+typedef std::vector<V3fContainer> V3fContainerArray;
 struct WavefrontMeshData
 {
 	V3fContainer _positions;
@@ -27,7 +47,8 @@ struct WavefrontMeshData
 };
 struct ArnoldMeshData
 {
-	V3fContainer      _vlist_data;
+	V3fContainerArray _vlist_data;
+	// Topological stable being assumed
 	AtUInt32Container _nsides_data;
 	AtUInt32Container _vidxs_data;
 };
@@ -47,6 +68,9 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 								   AtByte											i_motion_samples,
 								   ArnoldMeshData&                                  o_arnold_mesh)
 {
+	if (!i_current_sample)
+		return;
+
 	// Assumes topologically stable
 	Alembic::AbcGeom::Int32ArraySamplePtr indices = i_current_sample->getFaceIndices();
 	Alembic::AbcGeom::Int32ArraySamplePtr counts = i_current_sample->getFaceCounts();
@@ -54,6 +78,40 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 	// Current
 	Alembic::AbcGeom::P3fArraySamplePtr current_P = i_current_sample->getPositions();
 	Alembic::AbcGeom::V3fArraySamplePtr current_v = i_current_sample->getVelocities();
+
+	if ( i_motion_samples == 1)
+	{
+		// Special case, return single time step from current sample
+		size_t num_nsides = counts->size();
+		size_t num_indices = indices->size();
+		size_t num_P = current_P->size();
+
+		o_arnold_mesh._nsides_data.resize(num_nsides);
+		o_arnold_mesh._vidxs_data.resize(num_indices);
+		o_arnold_mesh._vlist_data.resize(i_motion_samples);
+		o_arnold_mesh._vlist_data[0].resize(num_P);
+		for (size_t index=0;index<num_nsides;index++)
+		{
+			o_arnold_mesh._nsides_data[index] = counts->get()[index];
+		}
+		for (size_t index=0;index<num_indices;index++)
+		{
+			o_arnold_mesh._vidxs_data[index] = indices->get()[index];
+		}
+		for (size_t index=0;index<num_P;index++)
+		{
+			o_arnold_mesh._vlist_data[0][index].x = current_P->get()[index].x;
+			o_arnold_mesh._vlist_data[0][index].y = current_P->get()[index].y;
+			o_arnold_mesh._vlist_data[0][index].z = current_P->get()[index].z;
+		}
+
+		return;
+	}
+
+	if (i_prevous_sample && i_next_sample)
+	{
+
+	}
 }
 
 void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh&         pmesh,
