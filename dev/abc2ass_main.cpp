@@ -40,27 +40,110 @@ template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<Imath::V3f> V3fContainer;
 typedef std::vector<V3fContainer> V3fContainerArray;
-struct WavefrontMeshData
-{
-	V3fContainer _positions;
-	V3fContainer _normals;
-};
+typedef std::vector<std::string> StringContainer;
 struct ArnoldMeshData
 {
-	V3fContainerArray _vlist_data;
+	V3fContainerArray _vlist_data_array;
 	// Topological stable being assumed
 	AtUInt32Container _nsides_data;
 	AtUInt32Container _vidxs_data;
 };
-typedef std::vector<WavefrontMeshData> WavefrontMeshDataContainer;
-typedef std::vector<ArnoldMeshData> ArnoldMeshDataContainer;
-typedef std::vector<std::string> StringContainer;
+
+void make_arnold_polymesh(const std::string& name,
+		const ArnoldMeshData i_arnold_mesh_data)
+{
+	AtByte nkeys = i_arnold_mesh_data._vlist_data_array.size();
+	if (nkeys<1)
+		return;
+	// Assumes topological stability
+	AtUInt32 nelements = i_arnold_mesh_data._vlist_data_array[0].size();
+	// name
+	AtNode *polymesh = AiNode("polymesh");
+	AiNodeSetStr(polymesh, "name", name.c_str());
+
+	// vlist
+	AiNodeSetArray(polymesh, "vlist", AiArrayConvert(nelements,nkeys,AI_TYPE_POINT,i_arnold_mesh_data._vlist_data_array.data()));
+
+	// nsides
+	AiNodeSetArray(polymesh, "nsides", AiArrayConvert(i_arnold_mesh_data._nsides_data.size(),1,AI_TYPE_UINT,i_arnold_mesh_data._nsides_data.data()));
+
+	// vidxs
+	AiNodeSetArray(polymesh, "vidxs", AiArrayConvert(i_arnold_mesh_data._vidxs_data.size(),1,AI_TYPE_UINT,i_arnold_mesh_data._vidxs_data.data()));
+
+}
+
+void write_arnold_mesh_data_to_file(const ArnoldMeshData& i_arnold_mesh_data,
+									const std::string&    i_arnold_filename)
+{
+	  // start an Arnold session
+	  AiBegin();
+	  AiMsgSetLogFileName("pm.log");
+
+	  make_arnold_polymesh("test",i_arnold_mesh_data);
+
+	  // create a sphere geometric primitive
+	  AtNode *sph = AiNode("sphere");
+	  AiNodeSetStr(sph, "name", "mysphere");
+	  AiNodeSetFlt(sph, "radius", 5.0f);
+
+	  // create a lambert shader
+	  AtNode *shader = AiNode("lambert");
+	  AiNodeSetStr(shader, "name", "mylambert");
+	  AiNodeSetRGB(shader, "Kd_color", 1.0f, 0.0f, 0.0f);
+
+	  // assign the sphere's shader
+	  AiNodeSetPtr(sph, "shader", shader);
+
+	  // create a perspective camera
+	  AtNode *camera = AiNode("persp_camera");
+	  AiNodeSetStr(camera, "name", "mycamera");
+	  // position the camera (alternatively you can set 'matrix')
+	  AiNodeSetPnt(camera, "position", 0.f, 0.f, 60.f);
+
+	  // create a point light source
+	  AtNode *light = AiNode("point_light");
+	  AiNodeSetStr(light, "name", "mylight");
+	  // position the light (alternatively use 'matrix')
+	  AiNodeSetPnt(light, "position", 0.f, 10.f, 10.f);
+
+	  // get the global options node and set some options
+	  AtNode *options = AiUniverseGetOptions();
+	  AiNodeSetInt(options, "AA_samples", 1);
+	  AiNodeSetInt(options, "xres", 320);
+	  AiNodeSetInt(options, "yres", 240);
+	  // set the active camera (optional, since there is only one camera)
+	  AiNodeSetPtr(options, "camera", camera);
+
+	  // create an output driver node
+	  AtNode *driver = AiNode("driver_tiff");
+	  AiNodeSetStr(driver, "name", "mydriver");
+	  AiNodeSetStr(driver, "filename", "pm.tiff");
+
+	  // create a gaussian filter node
+	  AtNode *filter = AiNode("gaussian_filter");
+	  AiNodeSetStr(filter, "name", "myfilter");
+
+	  // assign the driver and filter to the main (beauty) AOV, which is called "RGB"
+	  AtArray *outputs_array = AiArrayAllocate(1, 1, AI_TYPE_STRING);
+	  AiArraySetStr(outputs_array, 0, "RGBA RGBA myfilter mydriver");
+	  AiNodeSetArray(options, "outputs", outputs_array);
+
+	  // finally, render the image
+	  // AiRender(AI_RENDER_MODE_CAMERA);
+
+	  // ... or you can write out an .ass file instead
+	  AiASSWrite(i_arnold_filename.c_str(), AI_NODE_ALL, false);
+
+	  // at this point we can shut down Arnold
+	  AiEnd();
+
+}
 
 /*!
  * \param i_relative_shutter_open This can be negative (relative to the current frame)
  * \param i_relative_shutter_close This can be negative (relative to the current frame)
  */
-void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_prevous_sample,
+void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_previous_sample,
 								   const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_current_sample,
 								   const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_next_sample,
 								   float											i_relative_shutter_open,
@@ -88,8 +171,8 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 
 		o_arnold_mesh._nsides_data.resize(num_nsides);
 		o_arnold_mesh._vidxs_data.resize(num_indices);
-		o_arnold_mesh._vlist_data.resize(i_motion_samples);
-		o_arnold_mesh._vlist_data[0].resize(num_P);
+		o_arnold_mesh._vlist_data_array.resize(i_motion_samples);
+		o_arnold_mesh._vlist_data_array[0].resize(num_P);
 		for (size_t index=0;index<num_nsides;index++)
 		{
 			o_arnold_mesh._nsides_data[index] = counts->get()[index];
@@ -100,23 +183,24 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 		}
 		for (size_t index=0;index<num_P;index++)
 		{
-			o_arnold_mesh._vlist_data[0][index].x = current_P->get()[index].x;
-			o_arnold_mesh._vlist_data[0][index].y = current_P->get()[index].y;
-			o_arnold_mesh._vlist_data[0][index].z = current_P->get()[index].z;
+			o_arnold_mesh._vlist_data_array[0][index].x = current_P->get()[index].x;
+			o_arnold_mesh._vlist_data_array[0][index].y = current_P->get()[index].y;
+			o_arnold_mesh._vlist_data_array[0][index].z = current_P->get()[index].z;
 		}
 
 		return;
 	}
 
-	if (i_prevous_sample && i_next_sample)
+	if (i_previous_sample && i_next_sample)
 	{
 
 	}
 }
 
-void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh&         pmesh,
-								   Alembic::Abc::index_t                i_requested_index,
-								   const std::string&                   i_arnold_filename)
+void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
+								   Alembic::Abc::index_t        i_requested_index,
+								   const std::string&           i_arnold_filename,
+								   AtByte 						i_motion_samples)
 {
 	Alembic::Abc::ISampleSelector current_sample_selector(i_requested_index);
     Alembic::AbcGeom::IPolyMeshSchema::Sample current_sample;
@@ -159,65 +243,17 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh&         pmesh,
         Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
     	pmesh.getSchema().get( next_sample, next_sample_selector );
 
-    }
-}
-
-void export_polymesh_as_wavefront_obj(Alembic::AbcGeom::IPolyMesh&         pmesh,
-									  const Alembic::Abc::ISampleSelector& i_sample_selector,
-									  const std::string&                   i_wavefront_filename)
-{
-    Alembic::AbcGeom::IPolyMeshSchema::Sample samp;
-
-    if ( pmesh.getSchema().getNumSamples() > 0 )
-    {
-
-    	std::ofstream wavefront_file;
-    	wavefront_file.open (i_wavefront_filename.c_str());
-
-    	wavefront_file << "# File exported by Nicholas Yue\n";
-
-
-    	pmesh.getSchema().get( samp, i_sample_selector );
-
-    	Alembic::AbcGeom::P3fArraySamplePtr P = samp.getPositions();
-    	Alembic::AbcGeom::Int32ArraySamplePtr indices = samp.getFaceIndices();
-    	Alembic::AbcGeom::Int32ArraySamplePtr counts = samp.getFaceCounts();
-    	Alembic::AbcGeom::V3fArraySamplePtr v = samp.getVelocities();
-
-        size_t P_size = P->size();
-        size_t indices_size = indices->size();
-        size_t counts_size = counts->size();
-        size_t v_size = v->size();
-
-        wavefront_file << boost::format("# %1% points") % P_size << std::endl;
-        wavefront_file << boost::format("# %1% velocities") % v_size << std::endl;
-        wavefront_file << boost::format("# %1% faces") % counts_size << std::endl;
-
-        wavefront_file << "g" << std::endl;
-        for (size_t index=0;index<P_size;index++)
-        {
-            wavefront_file << boost::format("v %1% %2% %3%") % P->get()[index].x % P->get()[index].y % P->get()[index].z << std::endl;
-        }
-        for (size_t index=0;index<v_size;index++)
-        {
-            wavefront_file << boost::format("vn %1% %2% %3%") % v->get()[index].x % v->get()[index].y % v->get()[index].z << std::endl;
-        }
-
-        wavefront_file << "g" << std::endl;
-        size_t indices_index = 0;
-        for (size_t index=0;index<counts_size;index++)
-        {
-            wavefront_file << "f";
-        	size_t face_vert_count = counts->get()[index];
-        	for (size_t face_vert_index=0;face_vert_index < face_vert_count; ++face_vert_index)
-        	{
-        		size_t face_vert_index_value = indices->get()[indices_index] + 1; // OBJ array is not zero based!
-        		wavefront_file << boost::format(" %1%//%1%") % face_vert_index_value;
-        		indices_index++;
-        	}
-    		wavefront_file << std::endl;
-        }
-        wavefront_file.close();
+    	ArnoldMeshData arnold_mesh_data;
+    	float          relative_shutter_open = -0.5f;
+		float          relative_shutter_close = 0.5f;
+    	build_polymesh_for_arnold_ass(&previous_sample,
+    								  &current_sample,
+									  &next_sample,
+									  relative_shutter_open,
+									  relative_shutter_close,
+									  i_motion_samples,
+									  arnold_mesh_data);
+    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename);
     }
 }
 
@@ -236,7 +272,8 @@ void flatten_string_array(const StringContainer& i_string_array,
 
 void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 							 const StringContainer&       i_hierachy_path,
-							 WavefrontMeshDataContainer&  o_meshes,
+							 size_t 					  i_requested_index,
+//							 WavefrontMeshDataContainer&  o_meshes,
 							 size_t                       i_level = 0)
 {
 	size_t numChildren = top.getNumChildren();
@@ -247,17 +284,20 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 		std::string child_name =top.getChildHeader(i).getName();
 		for (size_t indent=0;indent<i_level;indent++)
 			std::cout << "  ";
-		std::cout << boost::format("name : %1%") % child_name;
 		Alembic::Abc::IObject child(top,child_name);
 		const Alembic::Abc::MetaData &child_md = child.getMetaData();
+		std::string metadata_string = child_md.serialize();
+		std::cout << boost::format("metadata_string='%1%' child_name='%2%'") % metadata_string % child_name;
 		if (Alembic::AbcGeom::IPolyMeshSchema::matches(child_md))
 		{
+			std::cout << "00000" << std::endl;
 	        Alembic::AbcGeom::IPolyMesh mesh(top,child_name);
 	        Alembic::AbcGeom::IPolyMeshSchema& schema = mesh.getSchema();
 
 	    	Alembic::Abc::IV3fArrayProperty velocities_property = schema.getVelocitiesProperty();
 	    	if (velocities_property.valid())
 	    	{
+				std::cout << "00100" << std::endl;
 	    		StringContainer       _concatenated_hierachy_path = i_hierachy_path;
 	    		_concatenated_hierachy_path.push_back(child_name);
 	    		flatten_string_array(_concatenated_hierachy_path, "_", unique_object_path);
@@ -271,16 +311,9 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 	    			double start_frame = ts_ptr->getStoredTimes()[0] * fps;
 		    	    // std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
 	    		}
-	    	    size_t num_samples = mesh.getSchema().getNumSamples();
-	    	    std::cout << boost::format("num_samples = %1%") % num_samples << std::endl;
-
-	    	    for (Alembic::Abc::index_t sample_index = 0;sample_index<num_samples;++sample_index)
-	    	    {
-	    	    	Alembic::Abc::ISampleSelector iSS(sample_index);
-		    		// std::cout << boost::format(" of type PolyMesh, unique_object_path : '%1%'") % unique_object_path << std::endl;
-		    		std::string wavefront_filename = (boost::format("%s.%04d.obj") % unique_object_path % sample_index).str();
-		    		export_polymesh_as_wavefront_obj(mesh,iSS,wavefront_filename);
-	    	    }
+	    		std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
+	    		AtByte num_motion_samples = 1;
+	    	    export_polymesh_as_arnold_ass(mesh,i_requested_index,arnold_filename,num_motion_samples);
 	    	}
 		}
 		else if (Alembic::AbcGeom::IPointsSchema::matches(child_md))
@@ -301,20 +334,7 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 		std::cout << std::endl;
 		StringContainer       concatenated_hierachy_path = i_hierachy_path;
 		concatenated_hierachy_path.push_back(child_name);
-		get_mesh_from_hierarchy(child,
-								concatenated_hierachy_path,
-								o_meshes,
-								i_level+1);
 	}
-}
-
-void get_points_positions_velocities(Alembic::AbcGeom::IArchive& i_alembic_archive,
-									 const std::string           i_wavefront_basedir,
-									 WavefrontMeshDataContainer& o_meshes)
-{
-    Alembic::Abc::IObject top = i_alembic_archive.getTop();
-	size_t numChildren = top.getNumChildren();
-	std::cout << boost::format("numChildren = %1%") % numChildren << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -330,26 +350,10 @@ int main(int argc, char** argv)
     Alembic::AbcGeom::IArchive alembic_archive;
     alembic_archive = Alembic::AbcGeom::IArchive( Alembic::AbcCoreOgawa::ReadArchive(), alembic_fileName );
 
-    WavefrontMeshDataContainer meshes;
 	StringContainer       hierachy_path;
 
-#ifdef HMMM
-	uint32_t NumTimeSamplings = alembic_archive.getNumTimeSamplings();
-    std::cout << boost::format("NumTimeSamplings = %1%") % NumTimeSamplings << std::endl;
-	for (uint32_t samplingIndex=0;samplingIndex<NumTimeSamplings;samplingIndex++)
-	{
-		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = alembic_archive.getTimeSampling(samplingIndex);
-		Alembic::AbcGeom::TimeSamplingType ts_type = ts_ptr->getTimeSamplingType();
-	    std::cout << boost::format("ts[%1%] : isAcyclic = %2% isCyclic = %3% isUniform = %4% samples_per_cycle = %5%")
-	    							% samplingIndex
-									% ts_type.isAcyclic()
-									% ts_type.isCyclic()
-									% ts_type.isUniform()
-									% ts_type.getNumSamplesPerCycle()
-									<< std::endl;
-	}
-	get_mesh_from_hierarchy(alembic_archive.getTop(),hierachy_path,meshes);
-#endif // HMMM
+	get_mesh_from_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export);
+
 
     return 0;
 }
