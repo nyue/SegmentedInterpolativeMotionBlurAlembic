@@ -175,6 +175,8 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 	// Current
 	Alembic::AbcGeom::P3fArraySamplePtr current_P = i_current_sample->getPositions();
 	Alembic::AbcGeom::V3fArraySamplePtr current_v = i_current_sample->getVelocities();
+	size_t current_num_P = current_P->size();
+	size_t current_num_v = current_v->size();
 
 	// Topologically constant
 	size_t num_nsides = counts->size();
@@ -193,7 +195,6 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 	if ( i_motion_samples == 1)
 	{
 		// Special case, return single time step from current sample
-		size_t current_num_P = current_P->size();
 		std::cout << boost::format("num_nsides=%1% num_indices=%2% num_P=%3%") % num_nsides % num_indices % current_num_P << std::endl;
 		o_arnold_mesh._vlist_data_array.resize(boost::extents[i_motion_samples][current_num_P]);
 		for (size_t index=0;index<current_num_P;index++)
@@ -212,9 +213,25 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 
 		Alembic::AbcGeom::P3fArraySamplePtr previous_P = i_previous_sample->getPositions();
 		Alembic::AbcGeom::V3fArraySamplePtr previous_v = i_previous_sample->getVelocities();
+		size_t previous_num_P = previous_P->size();
+		size_t previous_num_v = previous_v->size();
 
 		Alembic::AbcGeom::P3fArraySamplePtr next_P = i_next_sample->getPositions();
 		Alembic::AbcGeom::V3fArraySamplePtr next_v = i_next_sample->getVelocities();
+		size_t next_num_P = next_P->size();
+		size_t next_num_v = next_v->size();
+
+		if (	(previous_num_P==current_num_P)
+				&&
+				(next_num_P==current_num_P)
+				&&
+				(previous_num_v==current_num_v)
+				&&
+				(next_num_v==current_num_v)
+				)
+		{
+
+		}
 	}
 	else if ((i_previous_sample == 0) && i_next_sample)
 	{
