@@ -13,6 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 
 #include <boost/format.hpp>
 #include <boost/multi_array.hpp>
@@ -43,6 +44,7 @@ typedef std::vector<AtUInt32> AtUInt32Container;
 //typedef std::vector<Imath::V3f> V3fContainer;
 //typedef std::vector<V3fContainer> V3fContainerArray;
 typedef std::vector<std::string> StringContainer;
+typedef std::vector<float> FloatContainer;
 struct ArnoldMeshData
 {
 	// V3fContainerArray _vlist_data_array;
@@ -151,6 +153,30 @@ void write_arnold_mesh_data_to_file(const ArnoldMeshData& i_arnold_mesh_data,
 
 }
 
+bool build_even_motion_relative_time_samples(float i_relative_shutter_open,
+											 float i_relative_shutter_close,
+											 AtByte i_motion_sample_count,
+											 FloatContainer& o_earlier_sampling_time_vector,
+											 FloatContainer& o_later_sampling_time_vector)
+{
+	if (i_motion_sample_count<2)
+		return false;
+	float shutter_delta = i_relative_shutter_close - i_relative_shutter_open;
+	if (shutter_delta < FLT_EPSILON)
+		return false;
+	o_earlier_sampling_time_vector.clear();
+	o_later_sampling_time_vector.clear();
+	for (AtByte sample_index=0;sample_index<i_motion_sample_count;sample_index++)
+	{
+		float time_sample  = i_relative_shutter_open + sample_index * shutter_delta;
+		if (time_sample>=0.0f)
+			o_later_sampling_time_vector.push_back(time_sample);
+		else
+			o_earlier_sampling_time_vector.push_back(time_sample);
+	}
+	return true;
+}
+
 /*!
  * \param i_relative_shutter_open This can be negative (relative to the current frame)
  * \param i_relative_shutter_close This can be negative (relative to the current frame)
@@ -160,7 +186,7 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 								   const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_next_sample,
 								   float											i_relative_shutter_open,
 								   float											i_relative_shutter_close,
-								   AtByte											i_motion_samples,
+								   AtByte											i_motion_sample_count,
 								   ArnoldMeshData&                                  o_arnold_mesh)
 {
 	std::cout << "INTERPOLATE 0000" << std::endl;
@@ -192,11 +218,11 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 		o_arnold_mesh._vidxs_data[index] = indices->get()[index];
 	}
 
-	if ( i_motion_samples == 1)
+	if ( i_motion_sample_count == 1)
 	{
 		// Special case, return single time step from current sample
 		std::cout << boost::format("num_nsides=%1% num_indices=%2% num_P=%3%") % num_nsides % num_indices % current_num_P << std::endl;
-		o_arnold_mesh._vlist_data_array.resize(boost::extents[i_motion_samples][current_num_P]);
+		o_arnold_mesh._vlist_data_array.resize(boost::extents[i_motion_sample_count][current_num_P]);
 		for (size_t index=0;index<current_num_P;index++)
 		{
 			o_arnold_mesh._vlist_data_array[0][index].x = current_P->get()[index].x;
@@ -231,6 +257,74 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 				)
 		{
 
+			FloatContainer earlier_sampling_time_vector;
+			FloatContainer later_sampling_time_vector;
+			build_even_motion_relative_time_samples(i_relative_shutter_open,
+													i_relative_shutter_close,
+													i_motion_sample_count,
+													earlier_sampling_time_vector,
+													later_sampling_time_vector);
+
+			o_arnold_mesh._vlist_data_array.resize(boost::extents[i_motion_sample_count][current_num_P]);
+			assert(i_motion_sample_count==(earlier_sampling_time_vector.size()+later_sampling_time_vector.size()));
+			FloatContainer::const_iterator tsIter;
+			FloatContainer::const_iterator tsEIter;
+			size_t sampling_index = 0; // shared over both earlier_sampling_time_vector and later_sampling_time_vector
+
+			// Start with earlier time sample first so it is monotonically increasing
+
+			// EARLIER
+			tsIter = earlier_sampling_time_vector.begin();
+			tsEIter = earlier_sampling_time_vector.end();
+			for (;tsIter!=tsEIter;++tsIter)
+			{
+
+				for (size_t index=0;index<current_num_P;index++)
+				{
+					Imath::Vec3<float> P1(previous_P->get()[index].x,previous_P->get()[index].y,previous_P->get()[index].z);
+					Imath::Vec3<float> T1(previous_v->get()[index].x,previous_v->get()[index].y,previous_v->get()[index].z);
+					Imath::Vec3<float> P2(current_P->get()[index].x,current_P->get()[index].y,current_P->get()[index].z);
+					Imath::Vec3<float> T2(current_v->get()[index].x,current_v->get()[index].y,current_v->get()[index].z);
+					Imath::Vec3<float> P;
+					float s = *tsIter;
+					// std::cout << boost::format("s = %1%") % s << std::endl;
+					interpolate<float>(P1,T1,P2,T2,s,P);
+
+
+					o_arnold_mesh._vlist_data_array[sampling_index][index].x = P.x;
+					o_arnold_mesh._vlist_data_array[sampling_index][index].y = P.y;
+					o_arnold_mesh._vlist_data_array[sampling_index][index].z = P.z;
+				}
+
+				sampling_index++;
+
+			}
+
+			// LATER
+			tsIter = later_sampling_time_vector.begin();
+			tsEIter = later_sampling_time_vector.end();
+			for (;tsIter!=tsEIter;++tsIter)
+			{
+				for (size_t index=0;index<current_num_P;index++)
+				{
+
+					Imath::Vec3<float> P1(current_P->get()[index].x,current_P->get()[index].y,current_P->get()[index].z);
+					Imath::Vec3<float> T1(current_v->get()[index].x,current_v->get()[index].y,current_v->get()[index].z);
+					Imath::Vec3<float> P2(next_P->get()[index].x,next_P->get()[index].y,next_P->get()[index].z);
+					Imath::Vec3<float> T2(next_v->get()[index].x,next_v->get()[index].y,next_v->get()[index].z);
+					Imath::Vec3<float> P;
+					float s = *tsIter;
+					// std::cout << boost::format("s = %1%") % s << std::endl;
+					interpolate<float>(P1,T1,P2,T2,s,P);
+
+
+					o_arnold_mesh._vlist_data_array[sampling_index][index].x = P.x;
+					o_arnold_mesh._vlist_data_array[sampling_index][index].y = P.y;
+					o_arnold_mesh._vlist_data_array[sampling_index][index].z = P.z;
+				}
+
+				sampling_index++;
+			}
 		}
 	}
 	else if ((i_previous_sample == 0) && i_next_sample)
@@ -389,7 +483,7 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 	    			size_t start_frame = ts_ptr->getStoredTimes()[0] * fps;
 	    			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
 	    			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
-	    			AtByte num_motion_samples = 2;
+	    			AtByte num_motion_samples = 8;
 	    			export_polymesh_as_arnold_ass(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
 	    		}
 	    	}
