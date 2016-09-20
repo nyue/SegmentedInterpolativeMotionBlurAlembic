@@ -176,25 +176,27 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 	Alembic::AbcGeom::P3fArraySamplePtr current_P = i_current_sample->getPositions();
 	Alembic::AbcGeom::V3fArraySamplePtr current_v = i_current_sample->getVelocities();
 
+	// Topologically constant
+	size_t num_nsides = counts->size();
+	size_t num_indices = indices->size();
+	o_arnold_mesh._nsides_data.resize(num_nsides);
+	o_arnold_mesh._vidxs_data.resize(num_indices);
+	for (size_t index=0;index<num_nsides;index++)
+	{
+		o_arnold_mesh._nsides_data[index] = counts->get()[index];
+	}
+	for (size_t index=0;index<num_indices;index++)
+	{
+		o_arnold_mesh._vidxs_data[index] = indices->get()[index];
+	}
+
 	if ( i_motion_samples == 1)
 	{
 		// Special case, return single time step from current sample
-		size_t num_nsides = counts->size();
-		size_t num_indices = indices->size();
-		size_t num_P = current_P->size();
-		std::cout << boost::format("num_nsides=%1% num_indices=%2% num_P=%3%") % num_nsides % num_indices % num_P << std::endl;
-		o_arnold_mesh._nsides_data.resize(num_nsides);
-		o_arnold_mesh._vidxs_data.resize(num_indices);
-		o_arnold_mesh._vlist_data_array.resize(boost::extents[i_motion_samples][num_P]);
-		for (size_t index=0;index<num_nsides;index++)
-		{
-			o_arnold_mesh._nsides_data[index] = counts->get()[index];
-		}
-		for (size_t index=0;index<num_indices;index++)
-		{
-			o_arnold_mesh._vidxs_data[index] = indices->get()[index];
-		}
-		for (size_t index=0;index<num_P;index++)
+		size_t current_num_P = current_P->size();
+		std::cout << boost::format("num_nsides=%1% num_indices=%2% num_P=%3%") % num_nsides % num_indices % current_num_P << std::endl;
+		o_arnold_mesh._vlist_data_array.resize(boost::extents[i_motion_samples][current_num_P]);
+		for (size_t index=0;index<current_num_P;index++)
 		{
 			o_arnold_mesh._vlist_data_array[0][index].x = current_P->get()[index].x;
 			o_arnold_mesh._vlist_data_array[0][index].y = current_P->get()[index].y;
@@ -207,6 +209,12 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 	if (i_previous_sample && i_next_sample)
 	{
 		std::cout << "INTERPOLATE INBETWEEN" << std::endl;
+
+		Alembic::AbcGeom::P3fArraySamplePtr previous_P = i_previous_sample->getPositions();
+		Alembic::AbcGeom::V3fArraySamplePtr previous_v = i_previous_sample->getVelocities();
+
+		Alembic::AbcGeom::P3fArraySamplePtr next_P = i_next_sample->getPositions();
+		Alembic::AbcGeom::V3fArraySamplePtr next_v = i_next_sample->getVelocities();
 	}
 	else if ((i_previous_sample == 0) && i_next_sample)
 	{
@@ -224,8 +232,8 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 								   Alembic::Abc::index_t        i_requested_frame_number,
 								   const std::string&           i_arnold_filename,
 								   AtByte 						i_motion_samples,
-								   float          				relative_shutter_open,
-								   float          				relative_shutter_close
+								   float          				i_relative_shutter_open,
+								   float          				i_relative_shutter_close
 								   )
 {
 
@@ -252,13 +260,13 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
     	build_polymesh_for_arnold_ass(0,
     								  &current_sample,
 									  &next_sample,
-									  relative_shutter_open,
-									  relative_shutter_close,
+									  i_relative_shutter_open,
+									  i_relative_shutter_close,
 									  i_motion_samples,
 									  arnold_mesh_data);
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
-				  relative_shutter_open,
-				  relative_shutter_close);
+				  i_relative_shutter_open,
+				  i_relative_shutter_close);
 
     }
     else if (requested_index == last_sample_index)
@@ -273,13 +281,13 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
     	build_polymesh_for_arnold_ass(&previous_sample,
     								  &current_sample,
 									  0,
-									  relative_shutter_open,
-									  relative_shutter_close,
+									  i_relative_shutter_open,
+									  i_relative_shutter_close,
 									  i_motion_samples,
 									  arnold_mesh_data);
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
-				  relative_shutter_open,
-				  relative_shutter_close);
+				  i_relative_shutter_open,
+				  i_relative_shutter_close);
 
     }
     else
@@ -298,13 +306,13 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
     	build_polymesh_for_arnold_ass(&previous_sample,
     								  &current_sample,
 									  &next_sample,
-									  relative_shutter_open,
-									  relative_shutter_close,
+									  i_relative_shutter_open,
+									  i_relative_shutter_close,
 									  i_motion_samples,
 									  arnold_mesh_data);
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
-				  relative_shutter_open,
-				  relative_shutter_close);
+				  i_relative_shutter_open,
+				  i_relative_shutter_close);
     }
 }
 
