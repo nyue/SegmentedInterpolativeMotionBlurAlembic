@@ -41,13 +41,10 @@ template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 
 typedef boost::multi_array<Imath::V3f, 2> V3fSamplingContainer;
 typedef std::vector<AtUInt32> AtUInt32Container;
-//typedef std::vector<Imath::V3f> V3fContainer;
-//typedef std::vector<V3fContainer> V3fContainerArray;
 typedef std::vector<std::string> StringContainer;
 typedef std::vector<float> FloatContainer;
 struct ArnoldMeshData
 {
-	// V3fContainerArray _vlist_data_array;
 	V3fSamplingContainer _vlist_data_array;
 	// Topological stable being assumed
 	AtUInt32Container _nsides_data;
