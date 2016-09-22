@@ -39,13 +39,14 @@ template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 			h4*T2;
 }
 
-typedef boost::multi_array<Imath::V3f, 2> V3fSamplingContainer;
+typedef boost::multi_array<Imath::V3f, 2> V3fSamplingArray2D;
+typedef boost::multi_array<Imath::V3f, 1> V3fSamplingArray1D;
 typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<std::string> StringContainer;
 typedef std::vector<float> FloatContainer;
 struct ArnoldMeshData
 {
-	V3fSamplingContainer _vlist_data_array;
+	V3fSamplingArray2D _vlist_data_array;
 	// Topological stable being assumed
 	AtUInt32Container _nsides_data;
 	AtUInt32Container _vidxs_data;
@@ -79,6 +80,32 @@ void make_arnold_polymesh(const std::string& name,
 	// deform_time_samples
 	float deform_time_samples[2] = {i_shutter_open,i_shutter_close};
 	AiNodeSetArray(polymesh, "deform_time_samples", AiArrayConvert(2,1,AI_TYPE_FLOAT,deform_time_samples));
+}
+
+void write_arnold_mesh_data_to_wavefront_file(const ArnoldMeshData& i_arnold_mesh_data,
+												  const std::string&    i_wavefront_filename)
+{
+
+}
+void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold_mesh_data,
+												  const std::string&    i_base_filename)
+{
+
+	V3fSamplingArray2D::index num_samples = i_arnold_mesh_data._vlist_data_array.size();
+	V3fSamplingArray2D::index num_elements_per_sample = i_arnold_mesh_data._vlist_data_array.shape()[1];
+	std::cout << boost::format("num_elements_per_sample = %1%") % num_elements_per_sample << std::endl;
+	for (V3fSamplingArray2D::index sample_index=0;sample_index<num_samples;++sample_index)
+	{
+		std::string numbered_output_filename = (boost::format(i_base_filename) % sample_index).str();
+		std::cout << boost::format("numbered_output_filename = '%1%'") % numbered_output_filename << std::endl;
+		// i_arnold_mesh_data._vlist_data_array[sample_index]
+		V3fSamplingArray2D::index_gen indices;
+		typedef boost::multi_array_types::index_range range_t;
+//		V3fSamplingArray2D::array_view<1>::type single_sample =
+//				i_arnold_mesh_data._vlist_data_array[ indices[sample_index][range_t(0,num_elements_per_sample)] ];
+		typename V3fSamplingArray2D::array_view<1>::type single_sample;
+	}
+	std::cout << boost::format("_vlist_data_array num_elements = %1%") % i_arnold_mesh_data._vlist_data_array.size() << std::endl;
 }
 
 void write_arnold_mesh_data_to_file(const ArnoldMeshData& i_arnold_mesh_data,
@@ -287,7 +314,7 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 					float s = *tsIter;
 					// std::cout << boost::format("s = %1%") % s << std::endl;
 					interpolate<float>(P1,T1,P2,T2,s,P);
-					std::cout << boost::format("Earlier [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
+					// std::cout << boost::format("Earlier [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
 
 
 					o_arnold_mesh._vlist_data_array[sampling_index][index].x = P.x;
@@ -315,7 +342,7 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 					float s = *tsIter;
 					// std::cout << boost::format("s = %1%") % s << std::endl;
 					interpolate<float>(P1,T1,P2,T2,s,P);
-					std::cout << boost::format("Later [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
+					// std::cout << boost::format("Later [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
 
 
 					o_arnold_mesh._vlist_data_array[sampling_index][index].x = P.x;
@@ -426,8 +453,9 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 									  i_fps,
 									  arnold_mesh_data);
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
-				  i_relative_shutter_open,
-				  i_relative_shutter_close);
+    								   i_relative_shutter_open,
+									   i_relative_shutter_close);
+    	write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"per_sample.%04d.obj");
     }
 }
 
