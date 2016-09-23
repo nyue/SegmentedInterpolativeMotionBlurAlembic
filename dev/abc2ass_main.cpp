@@ -82,11 +82,50 @@ void make_arnold_polymesh(const std::string& name,
 	AiNodeSetArray(polymesh, "deform_time_samples", AiArrayConvert(2,1,AI_TYPE_FLOAT,deform_time_samples));
 }
 
-void write_arnold_mesh_data_to_wavefront_file(const ArnoldMeshData& i_arnold_mesh_data,
-												  const std::string&    i_wavefront_filename)
+void write_arnold_mesh_data_to_wavefront_file(const ArnoldMeshData&     i_arnold_mesh_data,
+											  V3fSamplingArray2D::index i_sample_index,
+											  const std::string&        i_wavefront_filename)
 {
 
+	std::ofstream wavefront_file;
+	wavefront_file.open (i_wavefront_filename.c_str());
+
+	wavefront_file << "# File exported by Nicholas Yue\n";
+
+
+    size_t P_size = i_arnold_mesh_data._vlist_data_array[i_sample_index].size();
+    size_t indices_size = i_arnold_mesh_data._vidxs_data.size();
+    size_t counts_size = i_arnold_mesh_data._nsides_data.size();
+
+    wavefront_file << boost::format("# %1% points") % P_size << std::endl;
+    wavefront_file << boost::format("# %1% faces") % counts_size << std::endl;
+
+    wavefront_file << "g" << std::endl;
+    for (size_t index=0;index<P_size;index++)
+    {
+    	float x = i_arnold_mesh_data._vlist_data_array[i_sample_index][index].x;
+    	float y = i_arnold_mesh_data._vlist_data_array[i_sample_index][index].y;
+    	float z = i_arnold_mesh_data._vlist_data_array[i_sample_index][index].z;
+        wavefront_file << boost::format("v %1% %2% %3%") % x % y % z << std::endl;
+    }
+
+    wavefront_file << "g" << std::endl;
+    size_t indices_index = 0;
+    for (size_t index=0;index<counts_size;index++)
+    {
+        wavefront_file << "f";
+    	size_t face_vert_count = i_arnold_mesh_data._nsides_data[index];
+    	for (size_t face_vert_index=0;face_vert_index < face_vert_count; ++face_vert_index)
+    	{
+    		size_t face_vert_index_value = i_arnold_mesh_data._vidxs_data[indices_index] + 1; // OBJ array is not zero based!
+    		wavefront_file << boost::format(" %1%") % face_vert_index_value;
+    		indices_index++;
+    	}
+		wavefront_file << std::endl;
+    }
+    wavefront_file.close();
 }
+
 void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold_mesh_data,
 												  const std::string&    i_base_filename)
 {
@@ -96,14 +135,9 @@ void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold
 	std::cout << boost::format("num_elements_per_sample = %1%") % num_elements_per_sample << std::endl;
 	for (V3fSamplingArray2D::index sample_index=0;sample_index<num_samples;++sample_index)
 	{
-		std::string numbered_output_filename = (boost::format(i_base_filename) % sample_index).str();
+		std::string numbered_output_filename = (boost::format(i_base_filename) % (sample_index+1)).str();
 		std::cout << boost::format("numbered_output_filename = '%1%'") % numbered_output_filename << std::endl;
-		// i_arnold_mesh_data._vlist_data_array[sample_index]
-		V3fSamplingArray2D::index_gen indices;
-		typedef boost::multi_array_types::index_range range_t;
-//		V3fSamplingArray2D::array_view<1>::type single_sample =
-//				i_arnold_mesh_data._vlist_data_array[ indices[sample_index][range_t(0,num_elements_per_sample)] ];
-		typename V3fSamplingArray2D::array_view<1>::type single_sample;
+		write_arnold_mesh_data_to_wavefront_file(i_arnold_mesh_data,sample_index,numbered_output_filename);
 	}
 	std::cout << boost::format("_vlist_data_array num_elements = %1%") % i_arnold_mesh_data._vlist_data_array.size() << std::endl;
 }
@@ -185,7 +219,7 @@ bool build_even_motion_relative_time_samples(float i_relative_shutter_open,
 {
 	if (i_motion_sample_count<2)
 		return false;
-	float shutter_delta = (i_relative_shutter_close - i_relative_shutter_open)/i_motion_sample_count;
+	float shutter_delta = (i_relative_shutter_close - i_relative_shutter_open)/(i_motion_sample_count-1);
 	if (shutter_delta < FLT_EPSILON)
 		return false;
 	o_earlier_sampling_time_vector.clear();
@@ -193,6 +227,7 @@ bool build_even_motion_relative_time_samples(float i_relative_shutter_open,
 	for (AtByte sample_index=0;sample_index<i_motion_sample_count;sample_index++)
 	{
 		float time_sample  = i_relative_shutter_open + sample_index * shutter_delta;
+		std::cout << boost::format("time_sample = %1%") % time_sample << std::endl;
 		if (time_sample>=0.0f)
 			o_later_sampling_time_vector.push_back(time_sample);
 		else
@@ -311,10 +346,10 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 					Imath::Vec3<float> P2(current_P->get()[index].x,current_P->get()[index].y,current_P->get()[index].z);
 					Imath::Vec3<float> T2(current_v->get()[index].x/i_fps,current_v->get()[index].y/i_fps,current_v->get()[index].z/i_fps);
 					Imath::Vec3<float> P;
-					float s = *tsIter;
-					// std::cout << boost::format("s = %1%") % s << std::endl;
+					float s = 1+(*tsIter);
+					std::cout << boost::format("EARLIER s = %1%") % s << std::endl;
 					interpolate<float>(P1,T1,P2,T2,s,P);
-					// std::cout << boost::format("Earlier [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
+					std::cout << boost::format("Earlier [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
 
 
 					o_arnold_mesh._vlist_data_array[sampling_index][index].x = P.x;
@@ -325,6 +360,8 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 				sampling_index++;
 
 			}
+
+			std::cout << "Earlier/Later =================================" << std::endl;
 
 			// LATER
 			tsIter = later_sampling_time_vector.begin();
@@ -342,7 +379,7 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 					float s = *tsIter;
 					// std::cout << boost::format("s = %1%") % s << std::endl;
 					interpolate<float>(P1,T1,P2,T2,s,P);
-					// std::cout << boost::format("Later [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
+					std::cout << boost::format("Later [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
 
 
 					o_arnold_mesh._vlist_data_array[sampling_index][index].x = P.x;
@@ -365,6 +402,20 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 
 }
 
+void print_sample_data(const std::string& i_message,const Alembic::AbcGeom::IPolyMeshSchema::Sample& i_sample)
+{
+	Alembic::AbcGeom::P3fArraySamplePtr sample_P = i_sample.getPositions();
+	Alembic::AbcGeom::V3fArraySamplePtr sample_v = i_sample.getVelocities();
+	size_t sample_num_P = sample_P->size();
+	size_t sample_num_v = sample_v->size();
+	assert(sample_num_P==sample_num_v);
+	for (size_t index=0;index<sample_num_P;index++)
+	{
+		std::cout << boost::format("[%1%] P = %2%, v = %3%") % i_message % sample_P->get()[index] % sample_v->get()[index] << std::endl;
+	}
+
+}
+
 void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 		   	   	   	   	   	   	   Alembic::Abc::index_t        i_start_frame_number,
 								   Alembic::Abc::index_t        i_requested_frame_number,
@@ -376,16 +427,16 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 								   )
 {
 
-	Alembic::Abc::ISampleSelector current_sample_selector(i_requested_frame_number);
-    Alembic::AbcGeom::IPolyMeshSchema::Sample current_sample;
-	pmesh.getSchema().get( current_sample, current_sample_selector );
-
     size_t num_samples = pmesh.getSchema().getNumSamples();
     size_t last_sample_index = num_samples - 1;
     Alembic::Abc::int64_t requested_index = i_requested_frame_number - i_start_frame_number - 1;
     std::cout << boost::format("num_samples = %1% i_requested_frame_number = %2% requested_index = %3% last_sample_index = %4%") % num_samples % i_requested_frame_number % requested_index % last_sample_index << std::endl;
     if (requested_index < 0 || requested_index > (num_samples-1))
     	return;
+
+	Alembic::Abc::ISampleSelector current_sample_selector(requested_index);
+    Alembic::AbcGeom::IPolyMeshSchema::Sample current_sample;
+	pmesh.getSchema().get( current_sample, current_sample_selector );
 
     if (requested_index == 0)
     {
@@ -434,15 +485,22 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
     else
     {
     	// Frame between first and last frame
-    	Alembic::Abc::ISampleSelector previous_sample_selector(requested_index-1);
-    	Alembic::Abc::ISampleSelector next_sample_selector(requested_index+1);
+    	Alembic::Abc::int64_t previous_index = requested_index - 1;
+    	Alembic::Abc::int64_t next_index = requested_index + 1;
+    	Alembic::Abc::ISampleSelector previous_sample_selector(previous_index);
+    	Alembic::Abc::ISampleSelector next_sample_selector(next_index);
+    	std::cout << boost::format("previous_index = %1% requested_index = %2% next_index = %3%") % previous_index % requested_index % next_index << std::endl;
+        Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
+    	pmesh.getSchema().get( next_sample, next_sample_selector );
 
         Alembic::AbcGeom::IPolyMeshSchema::Sample previous_sample;
     	pmesh.getSchema().get( previous_sample, previous_sample_selector );
 
-        Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
-    	pmesh.getSchema().get( next_sample, next_sample_selector );
-
+    	{
+    		print_sample_data("previous",previous_sample);
+    		print_sample_data("current",current_sample);
+    		print_sample_data("next",next_sample);
+    	}
     	ArnoldMeshData arnold_mesh_data;
     	build_polymesh_for_arnold_ass(&previous_sample,
     								  &current_sample,
@@ -477,6 +535,7 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 							 size_t 					  i_requested_index,
 							 float          			  i_relative_shutter_open,
 							 float          			  i_relative_shutter_close,
+				    		 AtByte						  num_motion_samples,
 							 size_t                       i_level = 0)
 {
 	size_t numChildren = top.getNumChildren();
@@ -516,7 +575,6 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 	    			size_t start_frame = ts_ptr->getStoredTimes()[0] * fps;
 	    			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
 	    			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
-	    			AtByte num_motion_samples = 32;
 	    			export_polymesh_as_arnold_ass(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close,fps);
 	    		}
 	    	}
@@ -544,6 +602,7 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 								i_requested_index,
 								i_relative_shutter_open,
 								i_relative_shutter_close,
+								num_motion_samples,
 								i_level+1);
 	}
 }
@@ -564,8 +623,9 @@ int main(int argc, char** argv)
 	StringContainer       hierachy_path;
 	float relative_shutter_open = -0.25f;
 	float relative_shutter_close = 0.25f;
+	AtByte num_motion_samples = 32;
 
-	get_mesh_from_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close);
+	get_mesh_from_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 
 
     return 0;
