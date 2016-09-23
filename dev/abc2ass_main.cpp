@@ -246,7 +246,7 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 								   float											i_relative_shutter_open,
 								   float											i_relative_shutter_close,
 								   AtByte											i_motion_sample_count,
-								   float                                            i_fps,
+								   // float                                            i_fps,
 								   ArnoldMeshData&                                  o_arnold_mesh)
 {
 	std::cout << "INTERPOLATE 0000" << std::endl;
@@ -342,9 +342,9 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 				for (size_t index=0;index<current_num_P;index++)
 				{
 					Imath::Vec3<float> P1(previous_P->get()[index].x,previous_P->get()[index].y,previous_P->get()[index].z);
-					Imath::Vec3<float> T1(previous_v->get()[index].x/i_fps,previous_v->get()[index].y/i_fps,previous_v->get()[index].z/i_fps);
+					Imath::Vec3<float> T1(previous_v->get()[index].x,previous_v->get()[index].y,previous_v->get()[index].z);
 					Imath::Vec3<float> P2(current_P->get()[index].x,current_P->get()[index].y,current_P->get()[index].z);
-					Imath::Vec3<float> T2(current_v->get()[index].x/i_fps,current_v->get()[index].y/i_fps,current_v->get()[index].z/i_fps);
+					Imath::Vec3<float> T2(current_v->get()[index].x,current_v->get()[index].y,current_v->get()[index].z);
 					Imath::Vec3<float> P;
 					float s = 1+(*tsIter);
 					std::cout << boost::format("EARLIER s = %1%") % s << std::endl;
@@ -372,9 +372,9 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 				{
 
 					Imath::Vec3<float> P1(current_P->get()[index].x,current_P->get()[index].y,current_P->get()[index].z);
-					Imath::Vec3<float> T1(current_v->get()[index].x/i_fps,current_v->get()[index].y/i_fps,current_v->get()[index].z/i_fps);
+					Imath::Vec3<float> T1(current_v->get()[index].x,current_v->get()[index].y,current_v->get()[index].z);
 					Imath::Vec3<float> P2(next_P->get()[index].x,next_P->get()[index].y,next_P->get()[index].z);
-					Imath::Vec3<float> T2(next_v->get()[index].x/i_fps,next_v->get()[index].y/i_fps,next_v->get()[index].z/i_fps);
+					Imath::Vec3<float> T2(next_v->get()[index].x,next_v->get()[index].y,next_v->get()[index].z);
 					Imath::Vec3<float> P;
 					float s = *tsIter;
 					// std::cout << boost::format("s = %1%") % s << std::endl;
@@ -422,8 +422,7 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 								   const std::string&           i_arnold_filename,
 								   AtByte 						i_motion_samples,
 								   float          				i_relative_shutter_open,
-								   float          				i_relative_shutter_close,
-								   float                        i_fps
+								   float          				i_relative_shutter_close
 								   )
 {
 
@@ -453,7 +452,6 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 									  i_relative_shutter_open,
 									  i_relative_shutter_close,
 									  i_motion_samples,
-									  i_fps,
 									  arnold_mesh_data);
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
 				  i_relative_shutter_open,
@@ -475,7 +473,6 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 									  i_relative_shutter_open,
 									  i_relative_shutter_close,
 									  i_motion_samples,
-									  i_fps,
 									  arnold_mesh_data);
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
 				  i_relative_shutter_open,
@@ -508,7 +505,6 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 									  i_relative_shutter_open,
 									  i_relative_shutter_close,
 									  i_motion_samples,
-									  i_fps,
 									  arnold_mesh_data);
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
     								   i_relative_shutter_open,
@@ -530,13 +526,13 @@ void flatten_string_array(const StringContainer& i_string_array,
 	}
 }
 
-void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
-							 const StringContainer&       i_hierachy_path,
-							 size_t 					  i_requested_index,
-							 float          			  i_relative_shutter_open,
-							 float          			  i_relative_shutter_close,
-				    		 AtByte						  num_motion_samples,
-							 size_t                       i_level = 0)
+void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
+								  const StringContainer&       i_hierachy_path,
+								  size_t 					  i_requested_index,
+								  float          			  i_relative_shutter_open,
+								  float          			  i_relative_shutter_close,
+								  AtByte						  num_motion_samples,
+								  size_t                       i_level = 0)
 {
 	size_t numChildren = top.getNumChildren();
 	std::string unique_object_path;
@@ -568,14 +564,14 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 	    		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = mesh.getSchema().getTimeSampling();
 	    		Alembic::AbcGeom::TimeSamplingType timeType = ts_ptr->getTimeSamplingType();
 	    		Alembic::AbcGeom::chrono_t tpc = timeType.getTimePerCycle();
-	    		Alembic::AbcGeom::chrono_t fps = 1.0/tpc;
+	    		// Alembic::AbcGeom::chrono_t fps = 1.0/tpc;
     			// std::cout << boost::format("fps = %1%") % fps << std::endl;
 	    		if ( timeType.isUniform() )
 	    		{
-	    			size_t start_frame = ts_ptr->getStoredTimes()[0] * fps;
+	    			size_t start_frame = ts_ptr->getStoredTimes()[0] / tpc;
 	    			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
 	    			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
-	    			export_polymesh_as_arnold_ass(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close,1.0);
+	    			export_polymesh_as_arnold_ass(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
 	    		}
 	    	}
 		}
@@ -597,7 +593,7 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 		std::cout << std::endl;
 		StringContainer       concatenated_hierachy_path = i_hierachy_path;
 		concatenated_hierachy_path.push_back(child_name);
-		get_mesh_from_hierarchy(child,
+		locate_geometry_in_hierarchy(child,
 								concatenated_hierachy_path,
 								i_requested_index,
 								i_relative_shutter_open,
@@ -625,7 +621,7 @@ int main(int argc, char** argv)
 	float relative_shutter_close = 0.25f;
 	AtByte num_motion_samples = 32;
 
-	get_mesh_from_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
+	locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 
 
     return 0;
