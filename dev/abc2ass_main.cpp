@@ -575,7 +575,7 @@ void get_mesh_from_hierarchy(const Alembic::Abc::IObject& top,
 	    			size_t start_frame = ts_ptr->getStoredTimes()[0] * fps;
 	    			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
 	    			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
-	    			export_polymesh_as_arnold_ass(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close,fps);
+	    			export_polymesh_as_arnold_ass(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close,1.0);
 	    		}
 	    	}
 		}
