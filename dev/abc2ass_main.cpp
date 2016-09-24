@@ -416,6 +416,17 @@ void print_sample_data(const std::string& i_message,const Alembic::AbcGeom::IPol
 
 }
 
+void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
+								 Alembic::Abc::index_t      i_start_frame_number,
+								 Alembic::Abc::index_t      i_requested_frame_number,
+								 const std::string&         i_arnold_filename,
+								 AtByte						i_motion_samples,
+								 float						i_relative_shutter_open,
+								 float						i_relative_shutter_close)
+{
+
+}
+
 void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 		   	   	   	   	   	   	   Alembic::Abc::index_t        i_start_frame_number,
 								   Alembic::Abc::index_t        i_requested_frame_number,
@@ -588,6 +599,21 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 	    		_concatenated_hierachy_path.push_back(child_name);
 	    		flatten_string_array(_concatenated_hierachy_path, "_", unique_object_path);
 	    		std::cout << boost::format(" of type Points, unique_object_path : '%1%'") % unique_object_path << std::endl;
+
+	    		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = points.getSchema().getTimeSampling();
+	    		Alembic::AbcGeom::TimeSamplingType timeType = ts_ptr->getTimeSamplingType();
+	    		Alembic::AbcGeom::chrono_t tpc = timeType.getTimePerCycle();
+	    		// Alembic::AbcGeom::chrono_t fps = 1.0/tpc;
+    			// std::cout << boost::format("fps = %1%") % fps << std::endl;
+	    		if ( timeType.isUniform() )
+	    		{
+	    			size_t start_frame = ts_ptr->getStoredTimes()[0] / tpc;
+	    			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
+	    			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
+	    			export_points_as_arnold_ass(points,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
+	    		}
+
+
 	    	}
 		}
 		std::cout << std::endl;
