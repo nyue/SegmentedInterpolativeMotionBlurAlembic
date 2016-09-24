@@ -11,6 +11,7 @@
 #include <Alembic/AbcMaterial/All.h>
 
 #include <vector>
+#include <map>
 #include <iostream>
 #include <fstream>
 #include <cassert>
@@ -41,6 +42,7 @@ template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 
 typedef boost::multi_array<Imath::V3f, 2> V3fSamplingArray2D;
 typedef std::vector<AtUInt32> AtUInt32Container;
+typedef std::vector<uint64_t> UInt64Container;
 typedef std::vector<std::string> StringContainer;
 typedef std::vector<float> FloatContainer;
 struct ArnoldMeshData
@@ -54,8 +56,19 @@ struct ArnoldPointsData
 {
 	V3fSamplingArray2D _points_data_array;
 	// Topological stable being assumed
+	UInt64Container _ids_data;
 	FloatContainer _radius_data;
 };
+struct AlembicPointsData
+{
+	AlembicPointsData(const Imath::V3f& i_position, const Imath::V3f& i_velocity)
+	: _position(i_position)
+	, _velocity(i_velocity)
+	{}
+	Imath::V3f _position;
+	Imath::V3f _velocity;
+};
+typedef std::map<uint64_t,AlembicPointsData> AlembicPointsDataIndexedMap;
 
 void make_arnold_points(const std::string& 		name,
 						const ArnoldPointsData& i_arnold_points_data,
@@ -141,6 +154,34 @@ void write_arnold_points_data_to_csv_file(const ArnoldPointsData&   i_arnold_poi
     }
 
     csv_file.close();
+}
+
+void write_arnold_points_data_to_csv_sequence(const ArnoldPointsData& i_arnold_points_data,
+												  const std::string&    i_base_filename)
+{
+	std::cout << "NICHOLAS write_arnold_points_data_to_csv_sequence() XXXXXXXXXXXXXXXXX" << std::endl;
+	V3fSamplingArray2D::index num_samples = i_arnold_points_data._points_data_array.size();
+	V3fSamplingArray2D::index num_elements_per_sample = i_arnold_points_data._points_data_array.shape()[1];
+	size_t num_radii = i_arnold_points_data._radius_data.size();
+	size_t num_ids = i_arnold_points_data._ids_data.size();
+	if ( num_radii != num_elements_per_sample )
+	{
+		std::cerr << boost::format("num_radii = %1% != num_elements_per_sample = %2%") % num_radii % num_elements_per_sample << std::endl;
+		return;
+	}
+	if ( num_ids != num_elements_per_sample )
+	{
+		std::cerr << boost::format("num_ids = %1% != num_elements_per_sample = %2%") % num_ids % num_elements_per_sample << std::endl;
+		return;
+	}
+	// std::cout << boost::format("num_elements_per_sample = %1%") % num_elements_per_sample << std::endl;
+	for (V3fSamplingArray2D::index sample_index=0;sample_index<num_samples;++sample_index)
+	{
+		std::string numbered_output_filename = (boost::format(i_base_filename) % (sample_index+1)).str();
+		// std::cout << boost::format("numbered_output_filename = '%1%'") % numbered_output_filename << std::endl;
+		write_arnold_points_data_to_csv_file(i_arnold_points_data,sample_index,numbered_output_filename);
+	}
+	// std::cout << boost::format("_vlist_data_array num_elements = %1%") % i_arnold_mesh_data._vlist_data_array.size() << std::endl;
 }
 
 void write_arnold_mesh_data_to_wavefront_file(const ArnoldMeshData&     i_arnold_mesh_data,
@@ -370,16 +411,71 @@ bool build_even_motion_relative_time_samples(float i_relative_shutter_open,
  * \param i_relative_shutter_open This can be negative (relative to the current frame)
  * \param i_relative_shutter_close This can be negative (relative to the current frame)
  */
-void build_points_for_arnold_ass(const Alembic::AbcGeom::IPointsSchema::Sample* i_previous_sample,
-								 const Alembic::AbcGeom::IPointsSchema::Sample* i_current_sample,
-								 const Alembic::AbcGeom::IPointsSchema::Sample* i_next_sample,
-								 float											i_relative_shutter_open,
-								 float											i_relative_shutter_close,
-								 AtByte											i_motion_sample_count,
-								 ArnoldPointsData&                              o_arnold_points)
+void build_interim_points_for_arnold_ass(const Alembic::AbcGeom::IPointsSchema::Sample* i_sample,
+										 AlembicPointsDataIndexedMap&                   o_interim_points)
+{
+	Alembic::AbcGeom::P3fArraySamplePtr positions = i_sample->getPositions();
+	Alembic::AbcGeom::V3fArraySamplePtr velocities = i_sample->getVelocities();
+	Alembic::AbcGeom::UInt64ArraySamplePtr ids = i_sample->getIds();
+	size_t num_positions = positions->size();
+	size_t num_velocities = velocities->size();
+	size_t num_ids = ids->size();
+	assert ( num_positions == num_ids );
+	assert ( num_velocities == num_ids );
+	std::pair<AlembicPointsDataIndexedMap::iterator,bool> ret;
+	for (size_t positions_index = 0;positions_index < num_positions; positions_index++)
+	{
+		ret = o_interim_points.insert(AlembicPointsDataIndexedMap::value_type(
+				ids->get()[positions_index],
+				AlembicPointsData(Imath::V3f(positions->get()[positions_index].x,positions->get()[positions_index].y,positions->get()[positions_index].z),
+						Imath::V3f(velocities->get()[positions_index].x,velocities->get()[positions_index].y,velocities->get()[positions_index].z))));
+		if (!ret.second)
+		{
+			std::cerr << "Failed to insert into map" << std::endl;
+			return;
+		}
+	}
+	// std::cout << boost::format("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX o_interim_points = %1%") % o_interim_points.size() << std::endl;
+}
+
+void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataIndexedMap* i_previous_interim_points,
+													 const AlembicPointsDataIndexedMap* i_current_interim_points,
+													 const AlembicPointsDataIndexedMap* i_next_interim_points,
+													 float								i_relative_shutter_open,
+													 float								i_relative_shutter_close,
+													 AtByte								i_motion_sample_count,
+													 ArnoldPointsData&					o_arnold_points)
 {
 
+	// Use the current interim point's id as lookup for the previous and next information
+	V3fSamplingArray2D::index num_test_samples = i_motion_sample_count;
+	num_test_samples = 1;
+	o_arnold_points._points_data_array.resize(boost::extents[num_test_samples][i_current_interim_points->size()]);
+	V3fSamplingArray2D::index point_index = 0;
+	for(AlembicPointsDataIndexedMap::const_iterator iter = i_current_interim_points->begin(); iter != i_current_interim_points->end(); iter++,point_index++)
+	{
+		o_arnold_points._ids_data.push_back(iter->first);
+		o_arnold_points._radius_data.push_back(0.1f);
+		o_arnold_points._points_data_array[0][point_index].x = iter->second._position.x;
+		o_arnold_points._points_data_array[0][point_index].y = iter->second._position.y;
+		o_arnold_points._points_data_array[0][point_index].z = iter->second._position.z;
+	}
 }
+
+///*!
+// * \param i_relative_shutter_open This can be negative (relative to the current frame)
+// * \param i_relative_shutter_close This can be negative (relative to the current frame)
+// */
+//void build_points_for_arnold_ass(const Alembic::AbcGeom::IPointsSchema::Sample* i_previous_sample,
+//								 const Alembic::AbcGeom::IPointsSchema::Sample* i_current_sample,
+//								 const Alembic::AbcGeom::IPointsSchema::Sample* i_next_sample,
+//								 float											i_relative_shutter_open,
+//								 float											i_relative_shutter_close,
+//								 AtByte											i_motion_sample_count,
+//								 ArnoldPointsData&                              o_arnold_points)
+//{
+//
+//}
 /*!
  * \param i_relative_shutter_open This can be negative (relative to the current frame)
  * \param i_relative_shutter_close This can be negative (relative to the current frame)
@@ -578,6 +674,9 @@ void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
 	Alembic::Abc::ISampleSelector current_sample_selector(requested_index);
     Alembic::AbcGeom::IPointsSchema::Sample current_sample;
     points.getSchema().get( current_sample, current_sample_selector );
+    AlembicPointsDataIndexedMap current_interim_points;
+
+    build_interim_points_for_arnold_ass(&current_sample,current_interim_points);
 
     if (requested_index == 0)
     {
@@ -587,14 +686,17 @@ void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
         Alembic::AbcGeom::IPointsSchema::Sample next_sample;
     	points.getSchema().get( next_sample, next_sample_selector );
 
+        AlembicPointsDataIndexedMap next_interim_points;
+        build_interim_points_for_arnold_ass(&next_sample,next_interim_points);
+
     	ArnoldPointsData arnold_points_data;
-    	build_points_for_arnold_ass(0,
-    								&current_sample,
-									&next_sample,
-									i_relative_shutter_open,
-									i_relative_shutter_close,
-									i_motion_samples,
-									arnold_points_data);
+    	build_points_for_arnold_ass_from_interim_points(0,
+    													&current_interim_points,
+														&next_interim_points,
+														i_relative_shutter_open,
+														i_relative_shutter_close,
+														i_motion_samples,
+														arnold_points_data);
     	write_arnold_points_data_to_file(arnold_points_data,
     									 i_arnold_filename,
 										 i_relative_shutter_open,
@@ -609,14 +711,17 @@ void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
         Alembic::AbcGeom::IPointsSchema::Sample previous_sample;
     	points.getSchema().get( previous_sample, previous_sample_selector );
 
+        AlembicPointsDataIndexedMap previous_interim_points;
+        build_interim_points_for_arnold_ass(&previous_sample,previous_interim_points);
+
     	ArnoldPointsData arnold_points_data;
-    	build_points_for_arnold_ass(&previous_sample,
-    								&current_sample,
-									0,
-									i_relative_shutter_open,
-									i_relative_shutter_close,
-									i_motion_samples,
-									arnold_points_data);
+    	build_points_for_arnold_ass_from_interim_points(&previous_interim_points,
+    													&current_interim_points,
+														0,
+														i_relative_shutter_open,
+														i_relative_shutter_close,
+														i_motion_samples,
+														arnold_points_data);
     	write_arnold_points_data_to_file(arnold_points_data,
     									 i_arnold_filename,
 										 i_relative_shutter_open,
@@ -625,6 +730,40 @@ void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
     }
     else
     {
+    	std::cout << "NICHOLAS XXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
+    	Alembic::Abc::ISampleSelector previous_sample_selector(requested_index-1);
+
+        Alembic::AbcGeom::IPointsSchema::Sample previous_sample;
+    	points.getSchema().get( previous_sample, previous_sample_selector );
+
+        AlembicPointsDataIndexedMap previous_interim_points;
+        build_interim_points_for_arnold_ass(&previous_sample,previous_interim_points);
+
+        // ==============
+
+    	Alembic::Abc::ISampleSelector next_sample_selector(requested_index+1);
+
+        Alembic::AbcGeom::IPointsSchema::Sample next_sample;
+    	points.getSchema().get( next_sample, next_sample_selector );
+
+        AlembicPointsDataIndexedMap next_interim_points;
+        build_interim_points_for_arnold_ass(&next_sample,next_interim_points);
+
+        // ==================
+    	ArnoldPointsData arnold_points_data;
+    	build_points_for_arnold_ass_from_interim_points(&previous_interim_points,
+    													&current_interim_points,
+														&next_interim_points,
+														i_relative_shutter_open,
+														i_relative_shutter_close,
+														i_motion_samples,
+														arnold_points_data);
+    	write_arnold_points_data_to_csv_sequence(arnold_points_data,"points_per_sample.%04d.csv");
+    	write_arnold_points_data_to_file(arnold_points_data,
+    									 i_arnold_filename,
+										 i_relative_shutter_open,
+										 i_relative_shutter_close);
+
 #ifdef HMMMM
     	// Frame between first and last frame
     	Alembic::Abc::int64_t previous_index = requested_index - 1;
@@ -753,7 +892,7 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
     	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
     								   i_relative_shutter_open,
 									   i_relative_shutter_close);
-    	write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"per_sample.%04d.obj");
+    	write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"mesh_per_sample.%04d.obj");
     }
 }
 
@@ -826,7 +965,8 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 	        Alembic::AbcGeom::IPointsSchema& schema = points.getSchema();
 
 	    	Alembic::Abc::IV3fArrayProperty velocities_property = schema.getVelocitiesProperty();
-	    	if (velocities_property.valid())
+	    	Alembic::Abc::IUInt64ArrayProperty ids_property = schema.getIdsProperty();
+	    	if (velocities_property.valid() && ids_property.valid())
 	    	{
 	    		StringContainer       _concatenated_hierachy_path = i_hierachy_path;
 	    		_concatenated_hierachy_path.push_back(child_name);
