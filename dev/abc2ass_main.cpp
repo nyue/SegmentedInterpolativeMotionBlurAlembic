@@ -40,7 +40,6 @@ template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 }
 
 typedef boost::multi_array<Imath::V3f, 2> V3fSamplingArray2D;
-typedef boost::multi_array<Imath::V3f, 1> V3fSamplingArray1D;
 typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<std::string> StringContainer;
 typedef std::vector<float> FloatContainer;
@@ -246,7 +245,6 @@ void build_polymesh_for_arnold_ass(const Alembic::AbcGeom::IPolyMeshSchema::Samp
 								   float											i_relative_shutter_open,
 								   float											i_relative_shutter_close,
 								   AtByte											i_motion_sample_count,
-								   // float                                            i_fps,
 								   ArnoldMeshData&                                  o_arnold_mesh)
 {
 	std::cout << "INTERPOLATE 0000" << std::endl;
