@@ -50,6 +50,39 @@ struct ArnoldMeshData
 	AtUInt32Container _nsides_data;
 	AtUInt32Container _vidxs_data;
 };
+struct ArnoldPointsData
+{
+	V3fSamplingArray2D _points_data_array;
+	// Topological stable being assumed
+	FloatContainer _radius_data;
+};
+
+void make_arnold_points(const std::string& 		name,
+						const ArnoldPointsData& i_arnold_points_data,
+						float 					i_shutter_open,
+						float 					i_shutter_close)
+{
+	AtByte nkeys = i_arnold_points_data._points_data_array.size();
+	if (nkeys<1)
+		return;
+	// Assumes topological stability
+	AtUInt32 nelements = i_arnold_points_data._points_data_array[0].size();
+	// name
+	AtNode *points = AiNode("points");
+	AiNodeSetStr(points, "name", name.c_str());
+
+	std::cout << boost::format("nelements=%1% nkeys=%2%") % nelements % int(nkeys)<< std::endl;
+
+	// points
+	AiNodeSetArray(points, "points", AiArrayConvert(nelements,nkeys,AI_TYPE_POINT,i_arnold_points_data._points_data_array.data()));
+
+	// radius
+	AiNodeSetArray(points, "radius", AiArrayConvert(i_arnold_points_data._radius_data.size(),1,AI_TYPE_FLOAT,i_arnold_points_data._radius_data.data()));
+
+	// deform_time_samples
+	float deform_time_samples[2] = {i_shutter_open,i_shutter_close};
+	AiNodeSetArray(points, "deform_time_samples", AiArrayConvert(2,1,AI_TYPE_FLOAT,deform_time_samples));
+}
 
 void make_arnold_polymesh(const std::string& name,
 						  const ArnoldMeshData& i_arnold_mesh_data,
@@ -79,6 +112,35 @@ void make_arnold_polymesh(const std::string& name,
 	// deform_time_samples
 	float deform_time_samples[2] = {i_shutter_open,i_shutter_close};
 	AiNodeSetArray(polymesh, "deform_time_samples", AiArrayConvert(2,1,AI_TYPE_FLOAT,deform_time_samples));
+}
+
+void write_arnold_points_data_to_csv_file(const ArnoldPointsData&   i_arnold_points_data,
+										  V3fSamplingArray2D::index i_sample_index,
+										  const std::string&        i_csv_filename)
+{
+	std::ofstream csv_file;
+	csv_file.open (i_csv_filename.c_str());
+
+	csv_file << "# File exported by Nicholas Yue\n";
+
+
+    size_t per_sample_point_count = i_arnold_points_data._points_data_array[i_sample_index].size();
+    size_t radius_count = i_arnold_points_data._radius_data.size();
+
+    assert ( per_sample_point_count == radius_count );
+
+    csv_file << "x,y,z,width" << std::endl;
+
+    for (size_t index=0;index<per_sample_point_count;index++)
+    {
+    	float x = i_arnold_points_data._points_data_array[i_sample_index][index].x;
+    	float y = i_arnold_points_data._points_data_array[i_sample_index][index].y;
+    	float z = i_arnold_points_data._points_data_array[i_sample_index][index].z;
+    	float w = i_arnold_points_data._radius_data[index] * 2.0f;
+        csv_file << boost::format("%1%, %2%, %3%, %4%") % x % y % z % w << std::endl;
+    }
+
+    csv_file.close();
 }
 
 void write_arnold_mesh_data_to_wavefront_file(const ArnoldMeshData&     i_arnold_mesh_data,
@@ -141,72 +203,141 @@ void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold
 	std::cout << boost::format("_vlist_data_array num_elements = %1%") % i_arnold_mesh_data._vlist_data_array.size() << std::endl;
 }
 
+void write_arnold_points_data_to_file(const ArnoldPointsData& i_arnold_points_data,
+									  const std::string&      i_arnold_filename,
+									  float 				  i_shutter_open,
+									  float 				  i_shutter_close)
+{
+	// start an Arnold session
+	AiBegin();
+	AiMsgSetLogFileName("pm.log");
+
+	make_arnold_points("test",i_arnold_points_data,i_shutter_open,i_shutter_close);
+
+	// create a sphere geometric primitive
+	AtNode *sph = AiNode("sphere");
+	AiNodeSetStr(sph, "name", "mysphere");
+	AiNodeSetFlt(sph, "radius", 5.0f);
+
+	// create a lambert shader
+	AtNode *shader = AiNode("lambert");
+	AiNodeSetStr(shader, "name", "mylambert");
+	AiNodeSetRGB(shader, "Kd_color", 1.0f, 0.0f, 0.0f);
+
+	// assign the sphere's shader
+	AiNodeSetPtr(sph, "shader", shader);
+
+	// create a perspective camera
+	AtNode *camera = AiNode("persp_camera");
+	AiNodeSetStr(camera, "name", "mycamera");
+	// position the camera (alternatively you can set 'matrix')
+	AiNodeSetPnt(camera, "position", 0.f, 0.f, 60.f);
+
+	// create a point light source
+	AtNode *light = AiNode("point_light");
+	AiNodeSetStr(light, "name", "mylight");
+	// position the light (alternatively use 'matrix')
+	AiNodeSetPnt(light, "position", 0.f, 10.f, 10.f);
+
+	// get the global options node and set some options
+	AtNode *options = AiUniverseGetOptions();
+	AiNodeSetInt(options, "AA_samples", 1);
+	AiNodeSetInt(options, "xres", 320);
+	AiNodeSetInt(options, "yres", 240);
+	// set the active camera (optional, since there is only one camera)
+	AiNodeSetPtr(options, "camera", camera);
+
+	// create an output driver node
+	AtNode *driver = AiNode("driver_tiff");
+	AiNodeSetStr(driver, "name", "mydriver");
+	AiNodeSetStr(driver, "filename", "pm.tiff");
+
+	// create a gaussian filter node
+	AtNode *filter = AiNode("gaussian_filter");
+	AiNodeSetStr(filter, "name", "myfilter");
+
+	// assign the driver and filter to the main (beauty) AOV, which is called "RGB"
+	AtArray *outputs_array = AiArrayAllocate(1, 1, AI_TYPE_STRING);
+	AiArraySetStr(outputs_array, 0, "RGBA RGBA myfilter mydriver");
+	AiNodeSetArray(options, "outputs", outputs_array);
+
+	// finally, render the image
+	// AiRender(AI_RENDER_MODE_CAMERA);
+
+	// ... or you can write out an .ass file instead
+	AiASSWrite(i_arnold_filename.c_str(), AI_NODE_ALL, false, false);
+
+	// at this point we can shut down Arnold
+	AiEnd();
+
+}
+
 void write_arnold_mesh_data_to_file(const ArnoldMeshData& i_arnold_mesh_data,
 									const std::string&    i_arnold_filename,
-									  float i_shutter_open,
-									  float i_shutter_close)
+									float 				  i_shutter_open,
+									float 				  i_shutter_close)
 {
-	  // start an Arnold session
-	  AiBegin();
-	  AiMsgSetLogFileName("pm.log");
+	// start an Arnold session
+	AiBegin();
+	AiMsgSetLogFileName("pm.log");
 
-	  make_arnold_polymesh("test",i_arnold_mesh_data,i_shutter_open,i_shutter_close);
+	make_arnold_polymesh("test",i_arnold_mesh_data,i_shutter_open,i_shutter_close);
 
-	  // create a sphere geometric primitive
-	  AtNode *sph = AiNode("sphere");
-	  AiNodeSetStr(sph, "name", "mysphere");
-	  AiNodeSetFlt(sph, "radius", 5.0f);
+	// create a sphere geometric primitive
+	AtNode *sph = AiNode("sphere");
+	AiNodeSetStr(sph, "name", "mysphere");
+	AiNodeSetFlt(sph, "radius", 5.0f);
 
-	  // create a lambert shader
-	  AtNode *shader = AiNode("lambert");
-	  AiNodeSetStr(shader, "name", "mylambert");
-	  AiNodeSetRGB(shader, "Kd_color", 1.0f, 0.0f, 0.0f);
+	// create a lambert shader
+	AtNode *shader = AiNode("lambert");
+	AiNodeSetStr(shader, "name", "mylambert");
+	AiNodeSetRGB(shader, "Kd_color", 1.0f, 0.0f, 0.0f);
 
-	  // assign the sphere's shader
-	  AiNodeSetPtr(sph, "shader", shader);
+	// assign the sphere's shader
+	AiNodeSetPtr(sph, "shader", shader);
 
-	  // create a perspective camera
-	  AtNode *camera = AiNode("persp_camera");
-	  AiNodeSetStr(camera, "name", "mycamera");
-	  // position the camera (alternatively you can set 'matrix')
-	  AiNodeSetPnt(camera, "position", 0.f, 0.f, 60.f);
+	// create a perspective camera
+	AtNode *camera = AiNode("persp_camera");
+	AiNodeSetStr(camera, "name", "mycamera");
+	// position the camera (alternatively you can set 'matrix')
+	AiNodeSetPnt(camera, "position", 0.f, 0.f, 60.f);
 
-	  // create a point light source
-	  AtNode *light = AiNode("point_light");
-	  AiNodeSetStr(light, "name", "mylight");
-	  // position the light (alternatively use 'matrix')
-	  AiNodeSetPnt(light, "position", 0.f, 10.f, 10.f);
+	// create a point light source
+	AtNode *light = AiNode("point_light");
+	AiNodeSetStr(light, "name", "mylight");
+	// position the light (alternatively use 'matrix')
+	AiNodeSetPnt(light, "position", 0.f, 10.f, 10.f);
 
-	  // get the global options node and set some options
-	  AtNode *options = AiUniverseGetOptions();
-	  AiNodeSetInt(options, "AA_samples", 1);
-	  AiNodeSetInt(options, "xres", 320);
-	  AiNodeSetInt(options, "yres", 240);
-	  // set the active camera (optional, since there is only one camera)
-	  AiNodeSetPtr(options, "camera", camera);
+	// get the global options node and set some options
+	AtNode *options = AiUniverseGetOptions();
+	AiNodeSetInt(options, "AA_samples", 1);
+	AiNodeSetInt(options, "xres", 320);
+	AiNodeSetInt(options, "yres", 240);
+	// set the active camera (optional, since there is only one camera)
+	AiNodeSetPtr(options, "camera", camera);
 
-	  // create an output driver node
-	  AtNode *driver = AiNode("driver_tiff");
-	  AiNodeSetStr(driver, "name", "mydriver");
-	  AiNodeSetStr(driver, "filename", "pm.tiff");
+	// create an output driver node
+	AtNode *driver = AiNode("driver_tiff");
+	AiNodeSetStr(driver, "name", "mydriver");
+	AiNodeSetStr(driver, "filename", "pm.tiff");
 
-	  // create a gaussian filter node
-	  AtNode *filter = AiNode("gaussian_filter");
-	  AiNodeSetStr(filter, "name", "myfilter");
+	// create a gaussian filter node
+	AtNode *filter = AiNode("gaussian_filter");
+	AiNodeSetStr(filter, "name", "myfilter");
 
-	  // assign the driver and filter to the main (beauty) AOV, which is called "RGB"
-	  AtArray *outputs_array = AiArrayAllocate(1, 1, AI_TYPE_STRING);
-	  AiArraySetStr(outputs_array, 0, "RGBA RGBA myfilter mydriver");
-	  AiNodeSetArray(options, "outputs", outputs_array);
+	// assign the driver and filter to the main (beauty) AOV, which is called "RGB"
+	AtArray *outputs_array = AiArrayAllocate(1, 1, AI_TYPE_STRING);
+	AiArraySetStr(outputs_array, 0, "RGBA RGBA myfilter mydriver");
+	AiNodeSetArray(options, "outputs", outputs_array);
 
-	  // finally, render the image
-	  // AiRender(AI_RENDER_MODE_CAMERA);
+	// finally, render the image
+	// AiRender(AI_RENDER_MODE_CAMERA);
 
-	  // ... or you can write out an .ass file instead
-	  AiASSWrite(i_arnold_filename.c_str(), AI_NODE_ALL, false, false);
+	// ... or you can write out an .ass file instead
+	AiASSWrite(i_arnold_filename.c_str(), AI_NODE_ALL, false, false);
 
-	  // at this point we can shut down Arnold
-	  AiEnd();
+	// at this point we can shut down Arnold
+	AiEnd();
 
 }
 
@@ -235,6 +366,20 @@ bool build_even_motion_relative_time_samples(float i_relative_shutter_open,
 	return true;
 }
 
+/*!
+ * \param i_relative_shutter_open This can be negative (relative to the current frame)
+ * \param i_relative_shutter_close This can be negative (relative to the current frame)
+ */
+void build_points_for_arnold_ass(const Alembic::AbcGeom::IPointsSchema::Sample* i_previous_sample,
+								 const Alembic::AbcGeom::IPointsSchema::Sample* i_current_sample,
+								 const Alembic::AbcGeom::IPointsSchema::Sample* i_next_sample,
+								 float											i_relative_shutter_open,
+								 float											i_relative_shutter_close,
+								 AtByte											i_motion_sample_count,
+								 ArnoldPointsData&                              o_arnold_points)
+{
+
+}
 /*!
  * \param i_relative_shutter_open This can be negative (relative to the current frame)
  * \param i_relative_shutter_close This can be negative (relative to the current frame)
@@ -422,6 +567,96 @@ void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
 								 float						i_relative_shutter_open,
 								 float						i_relative_shutter_close)
 {
+
+    size_t num_samples = points.getSchema().getNumSamples();
+    size_t last_sample_index = num_samples - 1;
+    Alembic::Abc::int64_t requested_index = i_requested_frame_number - i_start_frame_number - 1;
+    std::cout << boost::format("num_samples = %1% i_requested_frame_number = %2% requested_index = %3% last_sample_index = %4%") % num_samples % i_requested_frame_number % requested_index % last_sample_index << std::endl;
+    if (requested_index < 0 || requested_index > (num_samples-1))
+    	return;
+
+	Alembic::Abc::ISampleSelector current_sample_selector(requested_index);
+    Alembic::AbcGeom::IPointsSchema::Sample current_sample;
+    points.getSchema().get( current_sample, current_sample_selector );
+
+    if (requested_index == 0)
+    {
+    	// First frame
+    	Alembic::Abc::ISampleSelector next_sample_selector(requested_index+1);
+
+        Alembic::AbcGeom::IPointsSchema::Sample next_sample;
+    	points.getSchema().get( next_sample, next_sample_selector );
+
+    	ArnoldPointsData arnold_points_data;
+    	build_points_for_arnold_ass(0,
+    								&current_sample,
+									&next_sample,
+									i_relative_shutter_open,
+									i_relative_shutter_close,
+									i_motion_samples,
+									arnold_points_data);
+    	write_arnold_points_data_to_file(arnold_points_data,
+    									 i_arnold_filename,
+										 i_relative_shutter_open,
+										 i_relative_shutter_close);
+
+    }
+    else if (requested_index == last_sample_index)
+    {
+    	// Last frame
+    	Alembic::Abc::ISampleSelector previous_sample_selector(requested_index-1);
+
+        Alembic::AbcGeom::IPointsSchema::Sample previous_sample;
+    	points.getSchema().get( previous_sample, previous_sample_selector );
+
+    	ArnoldPointsData arnold_points_data;
+    	build_points_for_arnold_ass(&previous_sample,
+    								&current_sample,
+									0,
+									i_relative_shutter_open,
+									i_relative_shutter_close,
+									i_motion_samples,
+									arnold_points_data);
+    	write_arnold_points_data_to_file(arnold_points_data,
+    									 i_arnold_filename,
+										 i_relative_shutter_open,
+										 i_relative_shutter_close);
+
+    }
+    else
+    {
+#ifdef HMMMM
+    	// Frame between first and last frame
+    	Alembic::Abc::int64_t previous_index = requested_index - 1;
+    	Alembic::Abc::int64_t next_index = requested_index + 1;
+    	Alembic::Abc::ISampleSelector previous_sample_selector(previous_index);
+    	Alembic::Abc::ISampleSelector next_sample_selector(next_index);
+    	std::cout << boost::format("previous_index = %1% requested_index = %2% next_index = %3%") % previous_index % requested_index % next_index << std::endl;
+        Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
+    	pmesh.getSchema().get( next_sample, next_sample_selector );
+
+        Alembic::AbcGeom::IPolyMeshSchema::Sample previous_sample;
+    	pmesh.getSchema().get( previous_sample, previous_sample_selector );
+
+    	{
+    		print_sample_data("previous",previous_sample);
+    		print_sample_data("current",current_sample);
+    		print_sample_data("next",next_sample);
+    	}
+    	ArnoldMeshData arnold_mesh_data;
+    	build_polymesh_for_arnold_ass(&previous_sample,
+    								  &current_sample,
+									  &next_sample,
+									  i_relative_shutter_open,
+									  i_relative_shutter_close,
+									  i_motion_samples,
+									  arnold_mesh_data);
+    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
+    								   i_relative_shutter_open,
+									   i_relative_shutter_close);
+    	write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"per_sample.%04d.obj");
+#endif // HMMM
+    }
 
 }
 
