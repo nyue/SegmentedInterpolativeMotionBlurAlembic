@@ -34,7 +34,7 @@ template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 	T h4 =      std::pow(s,3.0) -     std::pow(s,2.0);       // calculate basis function 4
 
 
-	P = h1*P1 + // multiply and sum all funtions
+	P = h1*P1 + // multiply and sum all functions
 		h2*P2 + // together to build the interpolated
 		h3*T1 + // point along the curve.
 		h4*T2;
