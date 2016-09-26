@@ -16,6 +16,10 @@ ADD_EXECUTABLE ( abc2ass
   abc2ass_main.cpp
   )
 
+ADD_EXECUTABLE ( generate_points_test_data
+  generate_points_test_data_main.cpp
+  )
+
 TARGET_LINK_LIBRARIES ( query_alembic
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   )
@@ -25,6 +29,11 @@ TARGET_LINK_LIBRARIES ( abc2obj_velocities_as_normals
   )
 
 TARGET_LINK_LIBRARIES ( abc2ass
+  ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
+  ${Arnold_ai_LIBRARY}
+  )
+
+TARGET_LINK_LIBRARIES ( generate_points_test_data
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   ${Arnold_ai_LIBRARY}
   )
