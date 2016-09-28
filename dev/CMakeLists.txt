@@ -1,7 +1,9 @@
 SET ( SIMBA_DEV_REQUIRED_LINK_LIBRARIES
   ${Alembic_Alembic_LIBRARY}
   ${Ilmbase_HALF_LIBRARY}
+  ${Ilmbase_IEX_LIBRARY}
   ${HDF5_hdf5_LIBRARY}
+  ${HDF5_hdf5_hl_LIBRARY}
   )
 
 ADD_EXECUTABLE ( query_alembic
