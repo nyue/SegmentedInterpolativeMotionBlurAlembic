@@ -980,13 +980,21 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
     			// std::cout << boost::format("fps = %1%") % fps << std::endl;
 	    		if ( timeType.isUniform() )
 	    		{
+		    		std::cout << " timeType.isUniform() == true" << std::endl;
 	    			size_t start_frame = ts_ptr->getStoredTimes()[0] / tpc;
 	    			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
 	    			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
+		    		std::cout << boost::format(" arnold_filename : '%1%'") % arnold_filename << std::endl;
 	    			export_points_as_arnold_ass(points,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
 	    		}
-
-
+	    		else if (timeType.isCyclic())
+	    		{
+		    		std::cout << " timeType.isCyclic() == true" << std::endl;
+	    		}
+	    		else if (timeType.isAcyclic())
+	    		{
+		    		std::cout << " timeType.isAcyclic() == true" << std::endl;
+	    		}
 	    	}
 		}
 		std::cout << std::endl;

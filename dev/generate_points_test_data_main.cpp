@@ -80,8 +80,9 @@ void animate_points(Alembic::Util::uint32_t            i_num_points,
 			last_positions[pIndex] = m_positions[pIndex];
 		}
 		Alembic::AbcGeom::V3fArraySample position_data ( m_positions );
+		Alembic::AbcGeom::V3fArraySample velocity_data ( m_velocities );
 		Alembic::AbcGeom::UInt64ArraySample id_data ( m_ids );
-		Alembic::AbcGeom::OPointsSchema::Sample psamp(position_data,id_data);
+		Alembic::AbcGeom::OPointsSchema::Sample psamp(position_data,id_data,m_velocities);
 		pSchema.set( psamp );
 	}
 
