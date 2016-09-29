@@ -438,6 +438,27 @@ void build_interim_points_for_arnold_ass(const Alembic::AbcGeom::IPointsSchema::
 	// std::cout << boost::format("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX o_interim_points = %1%") % o_interim_points.size() << std::endl;
 }
 
+// Arnold point data layout in the case of multiple points with multiple motion blur segments
+//
+//points
+//{
+// name test
+// points 2 3 POINT
+// # 2 points
+// # 3 motion blur samples per point
+// # First sample
+// -10 0 0
+// 10 0 0
+// # Second sample
+// -10 5 0
+// 10 15 0
+// # Third sample
+// -15 5 0
+// 15 10 0
+// radius 1
+// deform_time_samples 2 1 FLOAT
+//-0.25 0.25
+//}
 void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataIndexedMap* i_previous_interim_points,
 													 const AlembicPointsDataIndexedMap* i_current_interim_points,
 													 const AlembicPointsDataIndexedMap* i_next_interim_points,
@@ -448,13 +469,29 @@ void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataInde
 {
 
 	// Use the current interim point's id as lookup for the previous and next information
-	V3fSamplingArray2D::index num_test_samples = i_motion_sample_count;
-	num_test_samples = 1;
-	o_arnold_points._points_data_array.resize(boost::extents[num_test_samples][i_current_interim_points->size()]);
+//	V3fSamplingArray2D::index num_test_samples = i_motion_sample_count;
+//	std::cout << boost::format("YYYYYYYYYYYYYYYYYYYYYY num_test_samples = %1%") % num_test_samples << std::endl;
+//	num_test_samples = 1;
+
+	 FloatContainer earlier_sampling_time_vector;
+	 FloatContainer later_sampling_time_vector;
+
+
+	if (build_even_motion_relative_time_samples(i_relative_shutter_open,
+												i_relative_shutter_close,
+												i_motion_sample_count,
+												earlier_sampling_time_vector,
+												later_sampling_time_vector))
+	{
+
+	}
+	return;
+	o_arnold_points._points_data_array.resize(boost::extents[i_motion_sample_count][i_current_interim_points->size()]);
 	V3fSamplingArray2D::index point_index = 0;
 	for(AlembicPointsDataIndexedMap::const_iterator iter = i_current_interim_points->begin(); iter != i_current_interim_points->end(); iter++,point_index++)
 	{
-		o_arnold_points._ids_data.push_back(iter->first);
+		uint64_t search_id = iter->first;
+		o_arnold_points._ids_data.push_back(search_id);
 		o_arnold_points._radius_data.push_back(0.1f);
 		o_arnold_points._points_data_array[0][point_index].x = iter->second._position.x;
 		o_arnold_points._points_data_array[0][point_index].y = iter->second._position.y;
@@ -1026,7 +1063,7 @@ int main(int argc, char** argv)
 	StringContainer       hierachy_path;
 	float relative_shutter_open = -0.25f;
 	float relative_shutter_close = 0.25f;
-	AtByte num_motion_samples = 32;
+	AtByte num_motion_samples = 2;
 
 	locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 
