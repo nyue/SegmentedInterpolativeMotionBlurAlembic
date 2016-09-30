@@ -134,9 +134,6 @@ void write_arnold_points_data_to_csv_file(const ArnoldPointsData&   i_arnold_poi
 	std::ofstream csv_file;
 	csv_file.open (i_csv_filename.c_str());
 
-	csv_file << "# File exported by Nicholas Yue\n";
-
-
     size_t per_sample_point_count = i_arnold_points_data._points_data_array[i_sample_index].size();
     size_t radius_count = i_arnold_points_data._radius_data.size();
 
@@ -473,8 +470,8 @@ void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataInde
 //	std::cout << boost::format("YYYYYYYYYYYYYYYYYYYYYY num_test_samples = %1%") % num_test_samples << std::endl;
 //	num_test_samples = 1;
 
-	 FloatContainer earlier_sampling_time_vector;
-	 FloatContainer later_sampling_time_vector;
+	FloatContainer earlier_sampling_time_vector;
+	FloatContainer later_sampling_time_vector;
 
 
 	if (build_even_motion_relative_time_samples(i_relative_shutter_open,
@@ -483,9 +480,21 @@ void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataInde
 												earlier_sampling_time_vector,
 												later_sampling_time_vector))
 	{
-
+		{
+			size_t num_earlier_samples = earlier_sampling_time_vector.size();
+			for (size_t index=0;index<num_earlier_samples;++index)
+			{
+				std::cout << boost::format("earlier_sampling_time_vector[%1%] = %2%") % index % earlier_sampling_time_vector[index] << std::endl;
+			}
+		}
+		{
+			size_t num_later_samples = later_sampling_time_vector.size();
+			for (size_t index=0;index<num_later_samples;++index)
+			{
+				std::cout << boost::format("later_sampling_time_vector[%1%] = %2%") % index % later_sampling_time_vector[index] << std::endl;
+			}
+		}
 	}
-	return;
 	o_arnold_points._points_data_array.resize(boost::extents[i_motion_sample_count][i_current_interim_points->size()]);
 	V3fSamplingArray2D::index point_index = 0;
 	for(AlembicPointsDataIndexedMap::const_iterator iter = i_current_interim_points->begin(); iter != i_current_interim_points->end(); iter++,point_index++)
@@ -493,9 +502,86 @@ void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataInde
 		uint64_t search_id = iter->first;
 		o_arnold_points._ids_data.push_back(search_id);
 		o_arnold_points._radius_data.push_back(0.1f);
-		o_arnold_points._points_data_array[0][point_index].x = iter->second._position.x;
-		o_arnold_points._points_data_array[0][point_index].y = iter->second._position.y;
-		o_arnold_points._points_data_array[0][point_index].z = iter->second._position.z;
+		bool previous_point_exists = false;
+		bool next_point_exists = false;
+		// Generate samples for this particular point
+		typedef std::vector<Imath::V3f> V3fContainer;
+
+		V3fContainer interpolated_P(i_motion_sample_count);
+		AlembicPointsDataIndexedMap::const_iterator find_previous_point_result;
+		AlembicPointsDataIndexedMap::const_iterator find_next_point_result;
+		if (i_previous_interim_points)
+		{
+			find_previous_point_result = i_previous_interim_points->find(search_id);
+	        if (find_previous_point_result != i_previous_interim_points->end())
+	        {
+	        	previous_point_exists = true;
+	        }
+		}
+
+		if (i_next_interim_points)
+		{
+			find_next_point_result = i_next_interim_points->find(search_id);
+	        if (find_next_point_result != i_next_interim_points->end())
+	        {
+	        	next_point_exists = true;
+	        }
+		}
+
+		// The are 3 possibilities - start, in-between and end
+		if (!previous_point_exists && next_point_exists)
+		{
+			// START frame
+			std::cout << "START frame : points processing" << std::endl;
+		}
+		else if (previous_point_exists && !next_point_exists)
+		{
+			// END frame
+			std::cout << "END frame : points processing" << std::endl;
+		}
+		else if (previous_point_exists && next_point_exists)
+		{
+			// INBETWEEN frame
+			std::cout << "INBETWEEN frame : points processing" << std::endl;
+			size_t interpolated_P_index = 0;
+			size_t num_earlier_sampling_time = earlier_sampling_time_vector.size();
+			size_t num_later_sampling_time = later_sampling_time_vector.size();
+
+			Imath::V3f P1;
+			Imath::V3f T1;
+			Imath::V3f P2;
+			Imath::V3f T2;
+
+			// Previous
+			P1 = find_previous_point_result->second._position;
+			T1 = find_previous_point_result->second._velocity;
+			P2 = iter->second._position;
+			T2 = iter->second._velocity;
+			for (size_t earlier_sample_index=0;earlier_sample_index<num_earlier_sampling_time;++earlier_sample_index)
+			{
+				float s = earlier_sampling_time_vector[earlier_sample_index];
+				interpolate<float>(P1,T1,P2,T2,s,interpolated_P[interpolated_P_index]);
+				interpolated_P_index++;
+			}
+
+			// Next
+			P1 = iter->second._position;
+			T1 = iter->second._velocity;
+			P2 = find_next_point_result->second._position;
+			T2 = find_next_point_result->second._velocity;
+			for (size_t next_sample_index=0;next_sample_index<num_later_sampling_time;++next_sample_index)
+			{
+				float s = later_sampling_time_vector[next_sample_index];
+				interpolate<float>(P1,T1,P2,T2,s,interpolated_P[interpolated_P_index]);
+				interpolated_P_index++;
+			}
+
+			assert ( interpolated_P_index == i_motion_sample_count );
+		}
+		for (V3fSamplingArray2D::index motion_index = 0;motion_index<i_motion_sample_count;++motion_index)
+		{
+			o_arnold_points._points_data_array[motion_index][point_index] = interpolated_P[motion_index];
+		}
 	}
 }
 
@@ -703,7 +789,7 @@ void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
 
     size_t num_samples = points.getSchema().getNumSamples();
     size_t last_sample_index = num_samples - 1;
-    Alembic::Abc::int64_t requested_index = i_requested_frame_number - i_start_frame_number - 1;
+    Alembic::Abc::int64_t requested_index = i_requested_frame_number - i_start_frame_number;
     std::cout << boost::format("num_samples = %1% i_requested_frame_number = %2% requested_index = %3% last_sample_index = %4%") % num_samples % i_requested_frame_number % requested_index % last_sample_index << std::endl;
     if (requested_index < 0 || requested_index > (num_samples-1))
     	return;
@@ -1063,7 +1149,7 @@ int main(int argc, char** argv)
 	StringContainer       hierachy_path;
 	float relative_shutter_open = -0.25f;
 	float relative_shutter_close = 0.25f;
-	AtByte num_motion_samples = 2;
+	AtByte num_motion_samples = 64;
 
 	locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 
