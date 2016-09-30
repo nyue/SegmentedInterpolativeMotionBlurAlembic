@@ -22,6 +22,10 @@ ADD_EXECUTABLE ( generate_points_test_data
   generate_points_test_data_main.cpp
   )
 
+ADD_EXECUTABLE ( multiarray_arnoldarray_layout_check
+  multiarray_arnoldarray_layout_check_main.cpp
+  )
+
 TARGET_LINK_LIBRARIES ( query_alembic
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   )
@@ -36,6 +40,11 @@ TARGET_LINK_LIBRARIES ( abc2ass
   )
 
 TARGET_LINK_LIBRARIES ( generate_points_test_data
+  ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
+  ${Arnold_ai_LIBRARY}
+  )
+
+TARGET_LINK_LIBRARIES ( multiarray_arnoldarray_layout_check
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   ${Arnold_ai_LIBRARY}
   )
