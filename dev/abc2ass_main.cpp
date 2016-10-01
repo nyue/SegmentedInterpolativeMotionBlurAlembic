@@ -882,43 +882,12 @@ void export_points_as_arnold_ass(Alembic::AbcGeom::IPoints& points,
 														i_relative_shutter_close,
 														i_motion_samples,
 														arnold_points_data);
-    	write_arnold_points_data_to_csv_sequence(arnold_points_data,"points_per_sample.%04d.csv");
+    	// write_arnold_points_data_to_csv_sequence(arnold_points_data,"points_per_sample.%04d.csv");
     	write_arnold_points_data_to_file(arnold_points_data,
     									 i_arnold_filename,
 										 i_relative_shutter_open,
 										 i_relative_shutter_close);
 
-#ifdef HMMMM
-    	// Frame between first and last frame
-    	Alembic::Abc::int64_t previous_index = requested_index - 1;
-    	Alembic::Abc::int64_t next_index = requested_index + 1;
-    	Alembic::Abc::ISampleSelector previous_sample_selector(previous_index);
-    	Alembic::Abc::ISampleSelector next_sample_selector(next_index);
-    	std::cout << boost::format("previous_index = %1% requested_index = %2% next_index = %3%") % previous_index % requested_index % next_index << std::endl;
-        Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
-    	pmesh.getSchema().get( next_sample, next_sample_selector );
-
-        Alembic::AbcGeom::IPolyMeshSchema::Sample previous_sample;
-    	pmesh.getSchema().get( previous_sample, previous_sample_selector );
-
-    	{
-    		print_sample_data("previous",previous_sample);
-    		print_sample_data("current",current_sample);
-    		print_sample_data("next",next_sample);
-    	}
-    	ArnoldMeshData arnold_mesh_data;
-    	build_polymesh_for_arnold_ass(&previous_sample,
-    								  &current_sample,
-									  &next_sample,
-									  i_relative_shutter_open,
-									  i_relative_shutter_close,
-									  i_motion_samples,
-									  arnold_mesh_data);
-    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
-    								   i_relative_shutter_open,
-									   i_relative_shutter_close);
-    	write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"per_sample.%04d.obj");
-#endif // HMMM
     }
 
 }
@@ -1150,7 +1119,7 @@ int main(int argc, char** argv)
 	StringContainer       hierachy_path;
 	float relative_shutter_open = -0.25f;
 	float relative_shutter_close = 0.25f;
-	AtByte num_motion_samples = 32;
+	AtByte num_motion_samples = 3;
 
 	locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 
