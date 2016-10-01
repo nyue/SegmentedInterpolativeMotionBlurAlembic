@@ -248,10 +248,10 @@ void write_arnold_points_data_to_file(const ArnoldPointsData& i_arnold_points_da
 {
 	// start an Arnold session
 	AiBegin();
-	AiMsgSetLogFileName("pm.log");
+//	AiMsgSetLogFileName("pm.log");
 
 	make_arnold_points("test",i_arnold_points_data,i_shutter_open,i_shutter_close);
-
+#ifdef FULL_ARNOLD_SCENE
 	// create a sphere geometric primitive
 	AtNode *sph = AiNode("sphere");
 	AiNodeSetStr(sph, "name", "mysphere");
@@ -301,6 +301,7 @@ void write_arnold_points_data_to_file(const ArnoldPointsData& i_arnold_points_da
 
 	// finally, render the image
 	// AiRender(AI_RENDER_MODE_CAMERA);
+#endif // FULL_ARNOLD_SCENE
 
 	// ... or you can write out an .ass file instead
 	AiASSWrite(i_arnold_filename.c_str(), AI_NODE_ALL, false, false);
@@ -501,7 +502,7 @@ void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataInde
 	{
 		uint64_t search_id = iter->first;
 		o_arnold_points._ids_data.push_back(search_id);
-		o_arnold_points._radius_data.push_back(0.1f);
+		o_arnold_points._radius_data.push_back(0.01f);
 		bool previous_point_exists = false;
 		bool next_point_exists = false;
 		// Generate samples for this particular point
@@ -559,7 +560,7 @@ void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataInde
 			T2 = iter->second._velocity;
 			for (size_t earlier_sample_index=0;earlier_sample_index<num_earlier_sampling_time;++earlier_sample_index)
 			{
-				float s = earlier_sampling_time_vector[earlier_sample_index];
+				float s = 1+earlier_sampling_time_vector[earlier_sample_index];
 				interpolate<float>(P1,T1,P2,T2,s,interpolated_P[interpolated_P_index]);
 				interpolated_P_index++;
 			}
@@ -1149,7 +1150,7 @@ int main(int argc, char** argv)
 	StringContainer       hierachy_path;
 	float relative_shutter_open = -0.25f;
 	float relative_shutter_close = 0.25f;
-	AtByte num_motion_samples = 64;
+	AtByte num_motion_samples = 32;
 
 	locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 

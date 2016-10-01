@@ -32,6 +32,7 @@ addBody(Alembic::Abc::OObject parent, std::string name)
 
 void animate_points(Alembic::Util::uint32_t            i_num_points,
 					Alembic::Util::uint32_t            i_num_time_samples,
+					float                              i_velocity_scale,
 					Alembic::AbcCoreAbstract::chrono_t i_fps,
 					const std::string&                 i_abc_fileName)
 {
@@ -62,7 +63,6 @@ void animate_points(Alembic::Util::uint32_t            i_num_points,
 	{
 		last_positions[pIndex] = Alembic::AbcGeom::V3f(drand48() - 0.5,drand48() - 0.5,drand48() - 0.5);
 	}
-	const float velocity_scaling = 1.0f;
 	for (Alembic::Abc::uint32_t sample_index = 0; sample_index < i_num_time_samples; sample_index++)
 	{
 		std::vector<Alembic::Util::uint64_t> m_ids(i_num_points);
@@ -71,13 +71,18 @@ void animate_points(Alembic::Util::uint32_t            i_num_points,
 		for (size_t pIndex = 0; pIndex < i_num_points; pIndex++)
 		{
 			m_ids[pIndex] = pIndex;
-			m_velocities[pIndex] = Alembic::AbcGeom::V3f(velocity_scaling*(drand48() - 0.5),
-														 velocity_scaling*(drand48() - 0.5),
-														 velocity_scaling*(drand48() - 0.5));
-			m_positions[pIndex].x = last_positions[pIndex].x + m_velocities[pIndex].x / i_fps;
-			m_positions[pIndex].y = last_positions[pIndex].y + m_velocities[pIndex].y / i_fps;
-			m_positions[pIndex].z = last_positions[pIndex].z + m_velocities[pIndex].z / i_fps;
+			float vel_x = drand48() - 0.5;
+			float vel_y = drand48() - 0.5;
+			float vel_z = drand48() - 0.5;
+			m_positions[pIndex].x = last_positions[pIndex].x + vel_x / i_fps;
+			m_positions[pIndex].y = last_positions[pIndex].y + vel_y / i_fps;
+			m_positions[pIndex].z = last_positions[pIndex].z + vel_z / i_fps;
+			m_velocities[pIndex] = Alembic::AbcGeom::V3f(i_velocity_scale * vel_x,
+														 i_velocity_scale * vel_y,
+														 i_velocity_scale * vel_z);
+
 			last_positions[pIndex] = m_positions[pIndex];
+
 		}
 		Alembic::AbcGeom::V3fArraySample position_data ( m_positions );
 		Alembic::AbcGeom::V3fArraySample velocity_data ( m_velocities );
@@ -100,7 +105,8 @@ int main(int argc, char **argv)
 	Alembic::Util::uint32_t num_points = atoi(argv[1]);
 	Alembic::Util::uint32_t num_time_samples = 240;
 	Alembic::AbcCoreAbstract::chrono_t iFps = 24.0;
+	float velocity_scale = 5.0;
 	std::string abc_filename(argv[2]);
-	animate_points(num_points, num_time_samples,iFps, abc_filename);
+	animate_points(num_points, num_time_samples, velocity_scale, iFps, abc_filename);
 	return 0;
 }
