@@ -1,4 +1,6 @@
 ADD_EXECUTABLE ( abc2ass_separate_schema
+  PointsSchemaHandler.cpp
+  PolyMeshSchemaHandler.cpp
   abc2ass_separate_schema_main.cpp
   )
 

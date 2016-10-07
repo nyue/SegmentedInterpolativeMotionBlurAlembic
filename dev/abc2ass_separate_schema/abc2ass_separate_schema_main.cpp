@@ -1,5 +1,8 @@
 #include <ai.h>
 
+#include "PointsSchemaHandler.h"
+#include "PolyMeshSchemaHandler.h"
+
 #include <Alembic/Util/All.h>
 #include <Alembic/AbcCoreAbstract/All.h>
 #include <Alembic/AbcCoreOgawa/All.h>
