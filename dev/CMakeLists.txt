@@ -14,10 +14,6 @@ ADD_EXECUTABLE ( abc2obj_velocities_as_normals
   abc2obj_velocities_as_normals_main.cpp
   )
 
-ADD_EXECUTABLE ( abc2ass
-  abc2ass_main.cpp
-  )
-
 ADD_EXECUTABLE ( generate_points_test_data
   generate_points_test_data_main.cpp
   )
@@ -34,11 +30,6 @@ TARGET_LINK_LIBRARIES ( abc2obj_velocities_as_normals
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   )
 
-TARGET_LINK_LIBRARIES ( abc2ass
-  ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
-  ${Arnold_ai_LIBRARY}
-  )
-
 TARGET_LINK_LIBRARIES ( generate_points_test_data
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   ${Arnold_ai_LIBRARY}
@@ -48,3 +39,5 @@ TARGET_LINK_LIBRARIES ( multiarray_arnoldarray_layout_check
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   ${Arnold_ai_LIBRARY}
   )
+
+ADD_SUBDIRECTORY ( abc2ass_monolithic )
