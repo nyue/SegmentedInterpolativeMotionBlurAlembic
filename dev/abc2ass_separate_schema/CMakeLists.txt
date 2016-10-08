@@ -1,6 +1,9 @@
 ADD_EXECUTABLE ( abc2ass_separate_schema
-  PointsSchemaHandler.cpp
-  PolyMeshSchemaHandler.cpp
+  AbstractGeomSchemaHandler.cpp
+  AbstractPointsSchemaHandler.cpp
+  AbstractPolyMeshSchemaHandler.cpp
+  ArnoldPointsSchemaHandler.cpp
+  ArnoldPolyMeshSchemaHandler.cpp
   abc2ass_separate_schema_main.cpp
   )
 

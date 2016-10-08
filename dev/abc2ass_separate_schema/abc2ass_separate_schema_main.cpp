@@ -1,7 +1,7 @@
 #include <ai.h>
 
-#include "PointsSchemaHandler.h"
-#include "PolyMeshSchemaHandler.h"
+#include "ArnoldPointsSchemaHandler.h"
+#include "ArnoldPolyMeshSchemaHandler.h"
 
 #include <Alembic/Util/All.h>
 #include <Alembic/AbcCoreAbstract/All.h>
@@ -1027,6 +1027,8 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 		std::cout << boost::format("metadata_string='%1%' child_name='%2%'") % metadata_string % child_name;
 		if (Alembic::AbcGeom::IPolyMeshSchema::matches(child_md))
 		{
+			ArnoldPolyMeshSchemaHandler apmsh;
+
 			std::cout << "00000" << std::endl;
 	        Alembic::AbcGeom::IPolyMesh mesh(top,child_name);
 	        Alembic::AbcGeom::IPolyMeshSchema& schema = mesh.getSchema();
@@ -1056,6 +1058,8 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 		}
 		else if (Alembic::AbcGeom::IPointsSchema::matches(child_md))
 		{
+			ArnoldPointsSchemaHandler apsh;
+
 			std::cout << " of type Points";
 	        Alembic::AbcGeom::IPoints points(top,child_name);
 	        Alembic::AbcGeom::IPointsSchema& schema = points.getSchema();

@@ -2,7 +2,7 @@
 
 #include "AbstractGeomSchemaHandler.h"
 
-class PointsSchemaHandler : public AbstractGeomSchemaHandler
+class AbstractPolyMeshSchemaHandler : public AbstractGeomSchemaHandler
 {
 
 };
