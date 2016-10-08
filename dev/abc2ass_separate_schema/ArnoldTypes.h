@@ -2,6 +2,7 @@
 
 #include <ai.h>
 #include <vector>
+#include "Types.h"
 
 typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<AtUInt64> AtUInt64Container;

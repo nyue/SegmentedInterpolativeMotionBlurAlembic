@@ -1,5 +1,6 @@
 #include "ArnoldPolyMeshSchemaHandler.h"
 #include "ArnoldUtils.h"
+#include "Utils.h"
 
 ArnoldPolyMeshSchemaHandler::ArnoldPolyMeshSchemaHandler()
 {
