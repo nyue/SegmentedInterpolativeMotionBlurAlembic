@@ -10,7 +10,7 @@ AbstractPolyMeshSchemaHandler::~AbstractPolyMeshSchemaHandler()
 
 }
 
-void AbstractPolyMeshSchemaHandler::process(const Alembic::Abc::IObject& top,
+void AbstractPolyMeshSchemaHandler::ProcessPolyMesh(const Alembic::Abc::IObject& top,
 											const std::string& child_name,
 											const StringContainer&       i_hierachy_path,
 											size_t 					  i_requested_index,

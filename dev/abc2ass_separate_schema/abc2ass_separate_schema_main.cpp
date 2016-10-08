@@ -1034,7 +1034,7 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 		{
 			ArnoldPolyMeshSchemaHandler apmsh;
 
-			apmsh.process(top, child_name, i_hierachy_path, i_requested_index, i_relative_shutter_open, i_relative_shutter_close, num_motion_samples);
+			apmsh.ProcessPolyMesh(top, child_name, i_hierachy_path, i_requested_index, i_relative_shutter_open, i_relative_shutter_close, num_motion_samples);
 		}
 		else if (Alembic::AbcGeom::IPointsSchema::matches(child_md))
 		{
