@@ -1,10 +1,13 @@
 #pragma once
-
+#include <stdint.h>
 #include <vector>
 #include <map>
 #include <boost/multi_array.hpp>
 #include <OpenEXR/ImathVec.h>
 
+/*!
+ * \TODO replace uint64_t with Alembic's definition so that it is cross platform
+ */
 typedef boost::multi_array<Imath::V3f, 2> V3fSamplingArray2D;
 typedef std::vector<uint64_t> UInt64Container;
 typedef std::vector<std::string> StringContainer;
