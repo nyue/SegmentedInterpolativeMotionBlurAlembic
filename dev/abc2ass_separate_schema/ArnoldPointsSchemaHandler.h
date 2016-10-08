@@ -4,7 +4,11 @@
 
 class ArnoldPointsSchemaHandler : public AbstractPointsSchemaHandler
 {
-
+public:
+	ArnoldPointsSchemaHandler();
+	virtual ~ArnoldPointsSchemaHandler();
+protected:
+	virtual void EmitPoints() const;
 };
 
 // == Emacs ================

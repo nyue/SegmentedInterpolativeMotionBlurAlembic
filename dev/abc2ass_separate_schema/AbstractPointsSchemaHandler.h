@@ -4,7 +4,11 @@
 
 class AbstractPointsSchemaHandler : public AbstractGeomSchemaHandler
 {
-
+public:
+	AbstractPointsSchemaHandler();
+	virtual ~AbstractPointsSchemaHandler();
+protected:
+	virtual void EmitPoints() const = 0;
 };
 
 // == Emacs ================

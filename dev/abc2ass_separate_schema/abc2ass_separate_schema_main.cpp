@@ -43,6 +43,7 @@ template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 		h4*T2;
 }
 
+#ifdef MONOLITHIC
 typedef boost::multi_array<Imath::V3f, 2> V3fSamplingArray2D;
 typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<uint64_t> UInt64Container;
@@ -62,6 +63,7 @@ struct ArnoldPointsData
 	UInt64Container _ids_data;
 	FloatContainer _radius_data;
 };
+#endif // MONOLITHIC
 struct AlembicPointsData
 {
 	AlembicPointsData(const Imath::V3f& i_position, const Imath::V3f& i_velocity)
@@ -918,6 +920,7 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
 
     if (requested_index == 0)
     {
+        std::cout << "export_polymesh_as_arnold_ass() requested_index == 0" << std::endl;
     	// First frame
     	Alembic::Abc::ISampleSelector next_sample_selector(requested_index+1);
 
@@ -939,6 +942,7 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
     }
     else if (requested_index == last_sample_index)
     {
+        std::cout << "export_polymesh_as_arnold_ass() requested_index == last_sample_index" << std::endl;
     	// Last frame
     	Alembic::Abc::ISampleSelector previous_sample_selector(requested_index-1);
 
@@ -960,6 +964,7 @@ void export_polymesh_as_arnold_ass(Alembic::AbcGeom::IPolyMesh& pmesh,
     }
     else
     {
+        std::cout << "export_polymesh_as_arnold_ass() requested_index is INBETWEEN" << std::endl;
     	// Frame between first and last frame
     	Alembic::Abc::int64_t previous_index = requested_index - 1;
     	Alembic::Abc::int64_t next_index = requested_index + 1;
@@ -1029,37 +1034,12 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 		{
 			ArnoldPolyMeshSchemaHandler apmsh;
 
-			apmsh.process();
-			std::cout << "00000" << std::endl;
-	        Alembic::AbcGeom::IPolyMesh mesh(top,child_name);
-	        Alembic::AbcGeom::IPolyMeshSchema& schema = mesh.getSchema();
-
-	    	Alembic::Abc::IV3fArrayProperty velocities_property = schema.getVelocitiesProperty();
-	    	if (velocities_property.valid())
-	    	{
-				std::cout << "00100" << std::endl;
-	    		StringContainer       _concatenated_hierachy_path = i_hierachy_path;
-	    		_concatenated_hierachy_path.push_back(child_name);
-	    		flatten_string_array(_concatenated_hierachy_path, "_", unique_object_path);
-
-
-	    		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = mesh.getSchema().getTimeSampling();
-	    		Alembic::AbcGeom::TimeSamplingType timeType = ts_ptr->getTimeSamplingType();
-	    		Alembic::AbcGeom::chrono_t tpc = timeType.getTimePerCycle();
-	    		// Alembic::AbcGeom::chrono_t fps = 1.0/tpc;
-    			// std::cout << boost::format("fps = %1%") % fps << std::endl;
-	    		if ( timeType.isUniform() )
-	    		{
-	    			size_t start_frame = ts_ptr->getStoredTimes()[0] / tpc;
-	    			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
-	    			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
-	    			export_polymesh_as_arnold_ass(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
-	    		}
-	    	}
+			apmsh.process(top, child_name, i_hierachy_path, i_requested_index, i_relative_shutter_open, i_relative_shutter_close, num_motion_samples);
 		}
 		else if (Alembic::AbcGeom::IPointsSchema::matches(child_md))
 		{
 			ArnoldPointsSchemaHandler apsh;
+			// apsh.process(top, child_name, i_hierachy_path, i_requested_index, i_relative_shutter_open, i_relative_shutter_close, num_motion_samples);
 
 			std::cout << " of type Points";
 	        Alembic::AbcGeom::IPoints points(top,child_name);
