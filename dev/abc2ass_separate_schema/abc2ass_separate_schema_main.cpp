@@ -1029,6 +1029,7 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 		{
 			ArnoldPolyMeshSchemaHandler apmsh;
 
+			apmsh.process();
 			std::cout << "00000" << std::endl;
 	        Alembic::AbcGeom::IPolyMesh mesh(top,child_name);
 	        Alembic::AbcGeom::IPolyMeshSchema& schema = mesh.getSchema();

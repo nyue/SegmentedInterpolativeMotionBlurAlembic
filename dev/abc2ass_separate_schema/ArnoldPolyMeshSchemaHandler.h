@@ -4,7 +4,15 @@
 
 class ArnoldPolyMeshSchemaHandler : public AbstractPolyMeshSchemaHandler
 {
+public:
+	ArnoldPolyMeshSchemaHandler();
+	virtual ~ArnoldPolyMeshSchemaHandler();
+	void process(
+			const Alembic::Abc::IObject& top,
+			const std::string& child_name,
+			  const StringContainer&       i_hierachy_path
 
+			) const;
 };
 
 // == Emacs ================
