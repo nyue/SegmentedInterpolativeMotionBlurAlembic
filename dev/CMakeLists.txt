@@ -42,3 +42,4 @@ TARGET_LINK_LIBRARIES ( multiarray_arnoldarray_layout_check
 
 ADD_SUBDIRECTORY ( abc2ass_monolithic )
 ADD_SUBDIRECTORY ( abc2ass_separate_schema )
+ADD_SUBDIRECTORY ( multiple_renderer_separate_schema )
