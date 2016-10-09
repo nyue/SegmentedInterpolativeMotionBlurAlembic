@@ -6,7 +6,7 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 								  size_t 					  i_requested_index,
 								  float          			  i_relative_shutter_open,
 								  float          			  i_relative_shutter_close,
-								  AtByte						  num_motion_samples,
+								  Alembic::Abc::uint8_t       num_motion_samples,
 								  size_t                       i_level = 0)
 {
 	size_t numChildren = top.getNumChildren();
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 	StringContainer       hierachy_path;
 	float relative_shutter_open = -0.25f;
 	float relative_shutter_close = 0.25f;
-	AtByte num_motion_samples = 3;
+	Alembic::Abc::uint8_t num_motion_samples = 3;
 
 	locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 

@@ -16,7 +16,7 @@ void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmes
 	   	   	   Alembic::Abc::index_t        i_start_frame_number,
 	   Alembic::Abc::index_t        i_requested_frame_number,
 	   const std::string&           i_arnold_filename,
-	   size_t 						i_motion_samples,
+	   Alembic::Abc::uint8_t 						i_motion_samples,
 	   float          				i_relative_shutter_open,
 	   float          				i_relative_shutter_close) const
 {
@@ -114,7 +114,7 @@ void ArnoldPolyMeshSchemaHandler::build_polymesh_for_arnold_ass(const Alembic::A
 								   const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_next_sample,
 								   float											i_relative_shutter_open,
 								   float											i_relative_shutter_close,
-								   size_t											i_motion_sample_count,
+								   Alembic::Abc::uint8_t											i_motion_sample_count,
 								   ArnoldMeshData&                                  o_arnold_mesh) const
 {
 	std::cout << "INTERPOLATE 0000" << std::endl;

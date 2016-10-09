@@ -16,7 +16,7 @@ void AbstractPointsSchemaHandler::ProcessPoints(const Alembic::Abc::IObject& top
 												size_t 					     i_requested_index,
 												float          			     i_relative_shutter_open,
 												float          			     i_relative_shutter_close,
-												size_t						 num_motion_samples) const
+												Alembic::Abc::uint8_t        num_motion_samples) const
 {
 	std::cout << " of type Points";
     Alembic::AbcGeom::IPoints points(top,child_name);

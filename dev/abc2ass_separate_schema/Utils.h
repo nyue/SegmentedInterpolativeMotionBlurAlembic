@@ -3,7 +3,7 @@
 
 bool build_even_motion_relative_time_samples(float           i_relative_shutter_open,
 		float           i_relative_shutter_close,
-		size_t          i_motion_sample_count,
+		Alembic::Abc::uint8_t          i_motion_sample_count,
 		FloatContainer& o_earlier_sampling_time_vector,
 		FloatContainer& o_later_sampling_time_vector);
 

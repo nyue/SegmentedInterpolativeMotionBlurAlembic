@@ -157,7 +157,7 @@ void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataInde
 													 const AlembicPointsDataIndexedMap* i_next_interim_points,
 													 float								i_relative_shutter_open,
 													 float								i_relative_shutter_close,
-													 AtByte								i_motion_sample_count,
+													 Alembic::Abc::uint8_t              i_motion_sample_count,
 													 ArnoldPointsData&					o_arnold_points)
 {
 

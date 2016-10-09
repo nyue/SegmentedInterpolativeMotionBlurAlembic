@@ -4,7 +4,7 @@
 
 bool build_even_motion_relative_time_samples(float           i_relative_shutter_open,
 		float           i_relative_shutter_close,
-		size_t          i_motion_sample_count,
+		Alembic::Abc::uint8_t          i_motion_sample_count,
 		FloatContainer& o_earlier_sampling_time_vector,
 		FloatContainer& o_later_sampling_time_vector)
 {
@@ -15,7 +15,7 @@ bool build_even_motion_relative_time_samples(float           i_relative_shutter_
 		return false;
 	o_earlier_sampling_time_vector.clear();
 	o_later_sampling_time_vector.clear();
-	for (size_t sample_index=0;sample_index<i_motion_sample_count;sample_index++)
+	for (Alembic::Abc::uint8_t sample_index=0;sample_index<i_motion_sample_count;sample_index++)
 	{
 		float time_sample  = i_relative_shutter_open + sample_index * shutter_delta;
 		std::cout << boost::format("time_sample = %1%") % time_sample << std::endl;

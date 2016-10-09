@@ -11,12 +11,12 @@ AbstractPolyMeshSchemaHandler::~AbstractPolyMeshSchemaHandler()
 }
 
 void AbstractPolyMeshSchemaHandler::ProcessPolyMesh(const Alembic::Abc::IObject& top,
-											const std::string& child_name,
-											const StringContainer&       i_hierachy_path,
-											size_t 					  i_requested_index,
-											float          			  i_relative_shutter_open,
-											float          			  i_relative_shutter_close,
-											size_t						  num_motion_samples) const
+													const std::string&           child_name,
+													const StringContainer&       i_hierachy_path,
+													size_t 					     i_requested_index,
+													float          			     i_relative_shutter_open,
+													float          			     i_relative_shutter_close,
+													Alembic::Abc::uint8_t		 num_motion_samples) const
 {
 	Alembic::AbcGeom::IPolyMesh mesh(top,child_name);
 	Alembic::AbcGeom::IPolyMeshSchema& schema = mesh.getSchema();

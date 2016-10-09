@@ -13,15 +13,15 @@ public:
 					   size_t 					    i_requested_index,
 					   float          			    i_relative_shutter_open,
 					   float          			    i_relative_shutter_close,
-					   size_t						num_motion_samples) const;
+					   Alembic::Abc::uint8_t        num_motion_samples) const;
 protected:
 	virtual void EmitPoints(Alembic::AbcGeom::IPoints& pmesh,
-	   	   	   	   	  Alembic::Abc::index_t        i_start_frame_number,
-			  Alembic::Abc::index_t        i_requested_frame_number,
-			  const std::string&           i_arnold_filename,
-			  size_t 					   i_motion_samples,
-			  float          			   i_relative_shutter_open,
-			  float          			   i_relative_shutter_close) const = 0;
+							Alembic::Abc::index_t        i_start_frame_number,
+							Alembic::Abc::index_t        i_requested_frame_number,
+							const std::string&           i_arnold_filename,
+							Alembic::Abc::uint8_t 	   i_motion_samples,
+							float          			   i_relative_shutter_open,
+							float          			   i_relative_shutter_close) const = 0;
 };
 
 // == Emacs ================
