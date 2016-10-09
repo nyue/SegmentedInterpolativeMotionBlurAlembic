@@ -1,7 +1,9 @@
 #include <Alembic/Util/All.h>
 #include <Alembic/AbcCoreAbstract/All.h>
 #include <Alembic/AbcCoreOgawa/All.h>
+#ifdef SIMBA_ENABLE_ALEMBIC_HDF5
 #include <Alembic/AbcCoreHDF5/All.h>
+#endif // SIMBA_ENABLE_ALEMBIC_HDF5
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcCoreFactory/All.h>
 #include <Alembic/AbcGeom/All.h>

@@ -1,11 +1,15 @@
 #include <boost/format.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/timer.hpp>
-#include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/variate_generator.hpp>
 
 #include <Alembic/AbcGeom/All.h>
+#ifdef SIMBA_ENABLE_ALEMBIC_HDF5
 #include <Alembic/AbcCoreHDF5/All.h>
+#endif // SIMBA_ENABLE_ALEMBIC_HDF5
 #include <Alembic/AbcCoreOgawa/All.h>
 #include <Alembic/Util/All.h>
 #include <Alembic/Abc/All.h>
@@ -14,6 +18,8 @@
 #include <string>
 #include <iostream>
 #include <vector>
+
+typedef boost::minstd_rand base_generator_type;
 
 Alembic::AbcGeom::OXform
 addXform(Alembic::Abc::OObject parent, std::string name)
@@ -56,12 +62,18 @@ void animate_points(Alembic::Util::uint32_t            i_num_points,
 	std::cout << boost::format("i_num_time_samples = %1%") % i_num_time_samples << std::endl;
 	Alembic::AbcGeom::OPointsSchema &pSchema = partsOut.getSchema();
 	// pSchema.setTimeSampling(tsidx);
-	srand48(0);
+
+	// Define a uniform random number distribution which produces "double"
+	// values between 0 and 1 (0 inclusive, 1 exclusive).
+	base_generator_type generator(42u);
+	boost::uniform_01<> uni_dist;
+	boost::variate_generator<base_generator_type&, boost::uniform_01<> > uni(generator, uni_dist);
+
 	// Initialize some known starting position(s)
 	std::vector<Alembic::AbcGeom::V3f> last_positions(i_num_points);
 	for (size_t pIndex = 0; pIndex < i_num_points; pIndex++)
 	{
-		last_positions[pIndex] = Alembic::AbcGeom::V3f(drand48() - 0.5,drand48() - 0.5,drand48() - 0.5);
+		last_positions[pIndex] = Alembic::AbcGeom::V3f(uni() - 0.5, uni() - 0.5, uni() - 0.5);
 	}
 	for (Alembic::Abc::uint32_t sample_index = 0; sample_index < i_num_time_samples; sample_index++)
 	{
@@ -71,9 +83,9 @@ void animate_points(Alembic::Util::uint32_t            i_num_points,
 		for (size_t pIndex = 0; pIndex < i_num_points; pIndex++)
 		{
 			m_ids[pIndex] = pIndex;
-			float vel_x = drand48() - 0.5;
-			float vel_y = drand48() - 0.5;
-			float vel_z = drand48() - 0.5;
+			float vel_x = uni() - 0.5;
+			float vel_y = uni() - 0.5;
+			float vel_z = uni() - 0.5;
 			m_positions[pIndex].x = last_positions[pIndex].x + vel_x / i_fps;
 			m_positions[pIndex].y = last_positions[pIndex].y + vel_y / i_fps;
 			m_positions[pIndex].z = last_positions[pIndex].z + vel_z / i_fps;
