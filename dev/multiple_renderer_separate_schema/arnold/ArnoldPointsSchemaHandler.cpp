@@ -47,13 +47,22 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
         build_interim_points(&next_sample,next_interim_points);
 
     	ArnoldPointsData arnold_points_data;
-    	build_points_for_arnold_ass_from_interim_points(0,
-    													&current_interim_points,
-														&next_interim_points,
-														i_relative_shutter_open,
-														i_relative_shutter_close,
-														i_motion_samples,
-														arnold_points_data);
+    	build_points_for_renderer_from_interim_points<V3fSamplingArray2D,AtUInt64Container,FloatContainer>(0,
+    			    													&current_interim_points,
+    																	&next_interim_points,
+    																	i_relative_shutter_open,
+    																	i_relative_shutter_close,
+    																	i_motion_samples,
+																		arnold_points_data._points_data_array,
+																		arnold_points_data._ids_data,
+																		arnold_points_data._radius_data);
+//    	build_points_for_arnold_ass_from_interim_points(0,
+//    													&current_interim_points,
+//														&next_interim_points,
+//														i_relative_shutter_open,
+//														i_relative_shutter_close,
+//														i_motion_samples,
+//														arnold_points_data);
     	write_arnold_points_data_to_file(arnold_points_data,
     									 i_arnold_filename,
 										 i_relative_shutter_open,
@@ -72,13 +81,22 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
         build_interim_points(&previous_sample,previous_interim_points);
 
     	ArnoldPointsData arnold_points_data;
-    	build_points_for_arnold_ass_from_interim_points(&previous_interim_points,
-    													&current_interim_points,
-														0,
-														i_relative_shutter_open,
-														i_relative_shutter_close,
-														i_motion_samples,
-														arnold_points_data);
+    	build_points_for_renderer_from_interim_points<V3fSamplingArray2D,AtUInt64Container,FloatContainer>(&previous_interim_points,
+    			    													&current_interim_points,
+    																	0,
+    																	i_relative_shutter_open,
+    																	i_relative_shutter_close,
+    																	i_motion_samples,
+																		arnold_points_data._points_data_array,
+																		arnold_points_data._ids_data,
+																		arnold_points_data._radius_data);
+//    	build_points_for_arnold_ass_from_interim_points(&previous_interim_points,
+//    													&current_interim_points,
+//														0,
+//														i_relative_shutter_open,
+//														i_relative_shutter_close,
+//														i_motion_samples,
+//														arnold_points_data);
     	write_arnold_points_data_to_file(arnold_points_data,
     									 i_arnold_filename,
 										 i_relative_shutter_open,
@@ -108,13 +126,22 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 
         // ==================
     	ArnoldPointsData arnold_points_data;
-    	build_points_for_arnold_ass_from_interim_points(&previous_interim_points,
-    													&current_interim_points,
-														&next_interim_points,
-														i_relative_shutter_open,
-														i_relative_shutter_close,
-														i_motion_samples,
-														arnold_points_data);
+    	build_points_for_renderer_from_interim_points<V3fSamplingArray2D,AtUInt64Container,FloatContainer>(&previous_interim_points,
+    			    													&current_interim_points,
+																		&next_interim_points,
+    																	i_relative_shutter_open,
+    																	i_relative_shutter_close,
+    																	i_motion_samples,
+																		arnold_points_data._points_data_array,
+																		arnold_points_data._ids_data,
+																		arnold_points_data._radius_data);
+//    	build_points_for_arnold_ass_from_interim_points(&previous_interim_points,
+//    													&current_interim_points,
+//														&next_interim_points,
+//														i_relative_shutter_open,
+//														i_relative_shutter_close,
+//														i_motion_samples,
+//														arnold_points_data);
     	// write_arnold_points_data_to_csv_sequence(arnold_points_data,"points_per_sample.%04d.csv");
     	write_arnold_points_data_to_file(arnold_points_data,
     									 i_arnold_filename,

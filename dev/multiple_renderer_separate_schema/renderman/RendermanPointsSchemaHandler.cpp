@@ -47,13 +47,15 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
         build_interim_points(&next_sample,next_interim_points);
 
     	RendermanPointsData renderman_points_data;
-    	build_points_for_renderman_rib_from_interim_points(0,
-														   &current_interim_points,
-														   &next_interim_points,
-														   i_relative_shutter_open,
-														   i_relative_shutter_close,
-														   i_motion_samples,
-														   renderman_points_data);
+    	build_points_for_renderer_from_interim_points<V3fSamplingArray2D,RtIntContainer,RtFloatContainer>(0,
+    			    													&current_interim_points,
+    																	&next_interim_points,
+    																	i_relative_shutter_open,
+    																	i_relative_shutter_close,
+    																	i_motion_samples,
+																		renderman_points_data._P_data_array,
+																		renderman_points_data._ids_data,
+																		renderman_points_data._widths_data);
     	write_renderman_points_data_to_file(renderman_points_data,
 											i_renderman_filename,
 											i_relative_shutter_open,
@@ -72,13 +74,16 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
         build_interim_points(&previous_sample,previous_interim_points);
 
     	RendermanPointsData renderman_points_data;
-    	build_points_for_renderman_rib_from_interim_points(&previous_interim_points,
-														   &current_interim_points,
-														   0,
-														   i_relative_shutter_open,
-														   i_relative_shutter_close,
-														   i_motion_samples,
-														   renderman_points_data);
+
+    	build_points_for_renderer_from_interim_points<V3fSamplingArray2D,RtIntContainer,RtFloatContainer>(&previous_interim_points,
+    			    													&current_interim_points,
+    																	0,
+    																	i_relative_shutter_open,
+    																	i_relative_shutter_close,
+    																	i_motion_samples,
+																		renderman_points_data._P_data_array,
+																		renderman_points_data._ids_data,
+																		renderman_points_data._widths_data);
     	write_renderman_points_data_to_file(renderman_points_data,
 											i_renderman_filename,
 											i_relative_shutter_open,
@@ -108,14 +113,20 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 
         // ==================
     	RendermanPointsData renderman_points_data;
-    	build_points_for_renderman_rib_from_interim_points(&previous_interim_points,
-														   &current_interim_points,
-														   &next_interim_points,
-														   i_relative_shutter_open,
-														   i_relative_shutter_close,
-														   i_motion_samples,
-														   renderman_points_data);
-    	// write_renderman_points_data_to_csv_sequence(renderman_points_data,"points_per_sample.%04d.csv");
+
+    	build_points_for_renderer_from_interim_points<V3fSamplingArray2D,RtIntContainer,RtFloatContainer>(&previous_interim_points,
+    			    													&current_interim_points,
+																		&next_interim_points,
+    																	i_relative_shutter_open,
+    																	i_relative_shutter_close,
+    																	i_motion_samples,
+																		renderman_points_data._P_data_array,
+																		renderman_points_data._ids_data,
+																		renderman_points_data._widths_data);
+    	write_renderer_points_data_to_csv_sequence<V3fSamplingArray2D,RtIntContainer,RtFloatContainer>(renderman_points_data._P_data_array,
+																									   renderman_points_data._ids_data,
+																									   renderman_points_data._widths_data,
+																									   "points_per_sample.%04d.csv");
     	write_renderman_points_data_to_file(renderman_points_data,
 											i_renderman_filename,
 											i_relative_shutter_open,

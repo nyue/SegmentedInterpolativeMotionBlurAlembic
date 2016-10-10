@@ -152,135 +152,135 @@ void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold
 //	// std::cout << boost::format("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX o_interim_points = %1%") % o_interim_points.size() << std::endl;
 //}
 
-void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataIndexedMap* i_previous_interim_points,
-													 const AlembicPointsDataIndexedMap* i_current_interim_points,
-													 const AlembicPointsDataIndexedMap* i_next_interim_points,
-													 float								i_relative_shutter_open,
-													 float								i_relative_shutter_close,
-													 Alembic::Abc::uint8_t              i_motion_sample_count,
-													 ArnoldPointsData&					o_arnold_points)
-{
-
-	// Use the current interim point's id as lookup for the previous and next information
-//	V3fSamplingArray2D::index num_test_samples = i_motion_sample_count;
-//	std::cout << boost::format("YYYYYYYYYYYYYYYYYYYYYY num_test_samples = %1%") % num_test_samples << std::endl;
-//	num_test_samples = 1;
-
-	FloatContainer earlier_sampling_time_vector;
-	FloatContainer later_sampling_time_vector;
-
-
-	if (build_even_motion_relative_time_samples(i_relative_shutter_open,
-												i_relative_shutter_close,
-												i_motion_sample_count,
-												earlier_sampling_time_vector,
-												later_sampling_time_vector))
-	{
-		{
-			size_t num_earlier_samples = earlier_sampling_time_vector.size();
-			for (size_t index=0;index<num_earlier_samples;++index)
-			{
-				std::cout << boost::format("earlier_sampling_time_vector[%1%] = %2%") % index % earlier_sampling_time_vector[index] << std::endl;
-			}
-		}
-		{
-			size_t num_later_samples = later_sampling_time_vector.size();
-			for (size_t index=0;index<num_later_samples;++index)
-			{
-				std::cout << boost::format("later_sampling_time_vector[%1%] = %2%") % index % later_sampling_time_vector[index] << std::endl;
-			}
-		}
-	}
-	o_arnold_points._points_data_array.resize(boost::extents[i_motion_sample_count][i_current_interim_points->size()]);
-	V3fSamplingArray2D::index point_index = 0;
-	for(AlembicPointsDataIndexedMap::const_iterator iter = i_current_interim_points->begin(); iter != i_current_interim_points->end(); iter++,point_index++)
-	{
-		uint64_t search_id = iter->first;
-		o_arnold_points._ids_data.push_back(search_id);
-		o_arnold_points._radius_data.push_back(0.01f);
-		bool previous_point_exists = false;
-		bool next_point_exists = false;
-		// Generate samples for this particular point
-		typedef std::vector<Imath::V3f> V3fContainer;
-
-		V3fContainer interpolated_P(i_motion_sample_count);
-		AlembicPointsDataIndexedMap::const_iterator find_previous_point_result;
-		AlembicPointsDataIndexedMap::const_iterator find_next_point_result;
-		if (i_previous_interim_points)
-		{
-			find_previous_point_result = i_previous_interim_points->find(search_id);
-	        if (find_previous_point_result != i_previous_interim_points->end())
-	        {
-	        	previous_point_exists = true;
-	        }
-		}
-
-		if (i_next_interim_points)
-		{
-			find_next_point_result = i_next_interim_points->find(search_id);
-	        if (find_next_point_result != i_next_interim_points->end())
-	        {
-	        	next_point_exists = true;
-	        }
-		}
-
-		// The are 3 possibilities - start, in-between and end
-		if (!previous_point_exists && next_point_exists)
-		{
-			// START frame
-			std::cout << "START frame : points processing" << std::endl;
-		}
-		else if (previous_point_exists && !next_point_exists)
-		{
-			// END frame
-			std::cout << "END frame : points processing" << std::endl;
-		}
-		else if (previous_point_exists && next_point_exists)
-		{
-			// INBETWEEN frame
-			std::cout << "INBETWEEN frame : points processing" << std::endl;
-			size_t interpolated_P_index = 0;
-			size_t num_earlier_sampling_time = earlier_sampling_time_vector.size();
-			size_t num_later_sampling_time = later_sampling_time_vector.size();
-
-			Imath::V3f P1;
-			Imath::V3f T1;
-			Imath::V3f P2;
-			Imath::V3f T2;
-
-			// Previous
-			P1 = find_previous_point_result->second._position;
-			T1 = find_previous_point_result->second._velocity;
-			P2 = iter->second._position;
-			T2 = iter->second._velocity;
-			for (size_t earlier_sample_index=0;earlier_sample_index<num_earlier_sampling_time;++earlier_sample_index)
-			{
-				float s = 1+earlier_sampling_time_vector[earlier_sample_index];
-				interpolate<float>(P1,T1,P2,T2,s,interpolated_P[interpolated_P_index]);
-				interpolated_P_index++;
-			}
-
-			// Next
-			P1 = iter->second._position;
-			T1 = iter->second._velocity;
-			P2 = find_next_point_result->second._position;
-			T2 = find_next_point_result->second._velocity;
-			for (size_t next_sample_index=0;next_sample_index<num_later_sampling_time;++next_sample_index)
-			{
-				float s = later_sampling_time_vector[next_sample_index];
-				interpolate<float>(P1,T1,P2,T2,s,interpolated_P[interpolated_P_index]);
-				interpolated_P_index++;
-			}
-
-			assert ( interpolated_P_index == i_motion_sample_count );
-		}
-		for (V3fSamplingArray2D::index motion_index = 0;motion_index<i_motion_sample_count;++motion_index)
-		{
-			o_arnold_points._points_data_array[motion_index][point_index] = interpolated_P[motion_index];
-		}
-	}
-
-}
+//void build_points_for_arnold_ass_from_interim_points(const AlembicPointsDataIndexedMap* i_previous_interim_points,
+//													 const AlembicPointsDataIndexedMap* i_current_interim_points,
+//													 const AlembicPointsDataIndexedMap* i_next_interim_points,
+//													 float								i_relative_shutter_open,
+//													 float								i_relative_shutter_close,
+//													 Alembic::Abc::uint8_t              i_motion_sample_count,
+//													 ArnoldPointsData&					o_arnold_points)
+//{
+//
+//	// Use the current interim point's id as lookup for the previous and next information
+////	V3fSamplingArray2D::index num_test_samples = i_motion_sample_count;
+////	std::cout << boost::format("YYYYYYYYYYYYYYYYYYYYYY num_test_samples = %1%") % num_test_samples << std::endl;
+////	num_test_samples = 1;
+//
+//	FloatContainer earlier_sampling_time_vector;
+//	FloatContainer later_sampling_time_vector;
+//
+//
+//	if (build_even_motion_relative_time_samples(i_relative_shutter_open,
+//												i_relative_shutter_close,
+//												i_motion_sample_count,
+//												earlier_sampling_time_vector,
+//												later_sampling_time_vector))
+//	{
+//		{
+//			size_t num_earlier_samples = earlier_sampling_time_vector.size();
+//			for (size_t index=0;index<num_earlier_samples;++index)
+//			{
+//				std::cout << boost::format("earlier_sampling_time_vector[%1%] = %2%") % index % earlier_sampling_time_vector[index] << std::endl;
+//			}
+//		}
+//		{
+//			size_t num_later_samples = later_sampling_time_vector.size();
+//			for (size_t index=0;index<num_later_samples;++index)
+//			{
+//				std::cout << boost::format("later_sampling_time_vector[%1%] = %2%") % index % later_sampling_time_vector[index] << std::endl;
+//			}
+//		}
+//	}
+//	o_arnold_points._points_data_array.resize(boost::extents[i_motion_sample_count][i_current_interim_points->size()]);
+//	V3fSamplingArray2D::index point_index = 0;
+//	for(AlembicPointsDataIndexedMap::const_iterator iter = i_current_interim_points->begin(); iter != i_current_interim_points->end(); iter++,point_index++)
+//	{
+//		uint64_t search_id = iter->first;
+//		o_arnold_points._ids_data.push_back(search_id);
+//		o_arnold_points._radius_data.push_back(0.01f);
+//		bool previous_point_exists = false;
+//		bool next_point_exists = false;
+//		// Generate samples for this particular point
+//		typedef std::vector<Imath::V3f> V3fContainer;
+//
+//		V3fContainer interpolated_P(i_motion_sample_count);
+//		AlembicPointsDataIndexedMap::const_iterator find_previous_point_result;
+//		AlembicPointsDataIndexedMap::const_iterator find_next_point_result;
+//		if (i_previous_interim_points)
+//		{
+//			find_previous_point_result = i_previous_interim_points->find(search_id);
+//	        if (find_previous_point_result != i_previous_interim_points->end())
+//	        {
+//	        	previous_point_exists = true;
+//	        }
+//		}
+//
+//		if (i_next_interim_points)
+//		{
+//			find_next_point_result = i_next_interim_points->find(search_id);
+//	        if (find_next_point_result != i_next_interim_points->end())
+//	        {
+//	        	next_point_exists = true;
+//	        }
+//		}
+//
+//		// The are 3 possibilities - start, in-between and end
+//		if (!previous_point_exists && next_point_exists)
+//		{
+//			// START frame
+//			std::cout << "START frame : points processing" << std::endl;
+//		}
+//		else if (previous_point_exists && !next_point_exists)
+//		{
+//			// END frame
+//			std::cout << "END frame : points processing" << std::endl;
+//		}
+//		else if (previous_point_exists && next_point_exists)
+//		{
+//			// INBETWEEN frame
+//			std::cout << "INBETWEEN frame : points processing" << std::endl;
+//			size_t interpolated_P_index = 0;
+//			size_t num_earlier_sampling_time = earlier_sampling_time_vector.size();
+//			size_t num_later_sampling_time = later_sampling_time_vector.size();
+//
+//			Imath::V3f P1;
+//			Imath::V3f T1;
+//			Imath::V3f P2;
+//			Imath::V3f T2;
+//
+//			// Previous
+//			P1 = find_previous_point_result->second._position;
+//			T1 = find_previous_point_result->second._velocity;
+//			P2 = iter->second._position;
+//			T2 = iter->second._velocity;
+//			for (size_t earlier_sample_index=0;earlier_sample_index<num_earlier_sampling_time;++earlier_sample_index)
+//			{
+//				float s = 1+earlier_sampling_time_vector[earlier_sample_index];
+//				interpolate<float>(P1,T1,P2,T2,s,interpolated_P[interpolated_P_index]);
+//				interpolated_P_index++;
+//			}
+//
+//			// Next
+//			P1 = iter->second._position;
+//			T1 = iter->second._velocity;
+//			P2 = find_next_point_result->second._position;
+//			T2 = find_next_point_result->second._velocity;
+//			for (size_t next_sample_index=0;next_sample_index<num_later_sampling_time;++next_sample_index)
+//			{
+//				float s = later_sampling_time_vector[next_sample_index];
+//				interpolate<float>(P1,T1,P2,T2,s,interpolated_P[interpolated_P_index]);
+//				interpolated_P_index++;
+//			}
+//
+//			assert ( interpolated_P_index == i_motion_sample_count );
+//		}
+//		for (V3fSamplingArray2D::index motion_index = 0;motion_index<i_motion_sample_count;++motion_index)
+//		{
+//			o_arnold_points._points_data_array[motion_index][point_index] = interpolated_P[motion_index];
+//		}
+//	}
+//
+//}
 
 void create_arnold_points_node(const std::string&    name,
 								 const ArnoldPointsData& i_arnold_points_data,

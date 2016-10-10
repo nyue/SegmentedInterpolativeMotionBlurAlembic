@@ -31,7 +31,7 @@ struct RendermanPointsData
 	V3fSamplingArray2D _P_data_array;
 	// Assumes topological stability
 	RtIntContainer _ids_data;
-	RtFloatContainer _width_data;
+	RtFloatContainer _widths_data;
 };
 // == Emacs ================
 // -------------------------
