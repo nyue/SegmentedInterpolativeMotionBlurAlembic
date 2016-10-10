@@ -82,7 +82,7 @@ bool build_points_for_renderer_from_interim_points(const AlembicPointsDataIndexe
 		{
 			uint64_t search_id = iter->first;
 			o_ids.push_back(search_id);
-			o_widths.push_back(0.01f);
+			o_widths.push_back(0.1f);
 			bool previous_point_exists = false;
 			bool next_point_exists = false;
 			// Generate samples for this particular point
