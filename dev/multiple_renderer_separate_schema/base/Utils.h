@@ -59,22 +59,6 @@ bool build_points_for_renderer_from_interim_points(const AlembicPointsDataIndexe
 												earlier_sampling_time_vector,
 												later_sampling_time_vector))
 	{
-#ifdef DEBUGGING
-		{
-			size_t num_earlier_samples = earlier_sampling_time_vector.size();
-			for (size_t index=0;index<num_earlier_samples;++index)
-			{
-				std::cout << boost::format("earlier_sampling_time_vector[%1%] = %2%") % index % earlier_sampling_time_vector[index] << std::endl;
-			}
-		}
-		{
-			size_t num_later_samples = later_sampling_time_vector.size();
-			for (size_t index=0;index<num_later_samples;++index)
-			{
-				std::cout << boost::format("later_sampling_time_vector[%1%] = %2%") % index % later_sampling_time_vector[index] << std::endl;
-			}
-		}
-#endif // DEBUGGING
 
 		o_motion_sample_point_positions.resize(boost::extents[i_motion_sample_count][i_current_interim_points->size()]);
 		V3fSamplingArray2D::index point_index = 0;
