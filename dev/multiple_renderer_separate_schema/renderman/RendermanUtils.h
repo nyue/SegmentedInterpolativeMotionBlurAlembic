@@ -22,9 +22,6 @@ void write_renderman_mesh_data_to_wavefront_sequence(const RendermanMeshData& i_
 													 const std::string&       i_base_filename);
 
 // Points
-void build_interim_points_for_renderman_rib(const Alembic::AbcGeom::IPointsSchema::Sample* i_sample,
-											AlembicPointsDataIndexedMap&                   o_interim_points);
-
 void build_points_for_renderman_rib_from_interim_points(const AlembicPointsDataIndexedMap* i_previous_interim_points,
 														const AlembicPointsDataIndexedMap* i_current_interim_points,
 														const AlembicPointsDataIndexedMap* i_next_interim_points,
