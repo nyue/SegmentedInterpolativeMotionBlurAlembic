@@ -4,8 +4,7 @@
 #include <Alembic/AbcGeom/All.h>
 
 // PolyMesh
-void create_renderman_polymesh_node(const std::string&       name,
-									const RendermanMeshData& i_renderman_mesh_data,
+void create_renderman_polymesh_node(const RendermanMeshData& i_renderman_mesh_data,
 									float                    i_shutter_open,
 									float                    i_shutter_close);
 

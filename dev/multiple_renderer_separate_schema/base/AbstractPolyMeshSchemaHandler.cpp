@@ -35,7 +35,7 @@ void AbstractPolyMeshSchemaHandler::ProcessPolyMesh(const Alembic::Abc::IObject&
 		if ( timeType.isUniform() )
 		{
 			size_t start_frame = ts_ptr->getStoredTimes()[0] / tpc;
-			std::string arnold_filename = (boost::format("%s.%04d.ass") % unique_object_path % i_requested_index).str();
+			std::string arnold_filename = (boost::format("%s.%04d.rib") % unique_object_path % i_requested_index).str();
 			EmitPolyMesh(mesh,start_frame,i_requested_index,arnold_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
 		}
 	}

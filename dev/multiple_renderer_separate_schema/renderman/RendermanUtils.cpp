@@ -4,11 +4,35 @@
 /*******************************************************************************
  * PolyMesh
  ******************************************************************************/
-void create_renderman_polymesh_node(const std::string&       name,
-									const RendermanMeshData& i_renderman_mesh_data,
+void create_renderman_polymesh_node(const RendermanMeshData& i_renderman_mesh_data,
 									float                    i_shutter_open,
 									float                    i_shutter_close)
 {
+	Alembic::Abc::uint8_t motion_sample_count = i_renderman_mesh_data._P_data_array.shape()[0];
+	RtInt npolys = i_renderman_mesh_data._nvertices_data.size();
+	bool has_multiple_samples = motion_sample_count > 1;
+
+
+	if (has_multiple_samples)
+	{
+		FloatContainer       sampling_time_vector;
+		build_single_even_motion_relative_time_samples(i_shutter_open,i_shutter_close,motion_sample_count,sampling_time_vector);
+		RiMotionBeginV(sampling_time_vector.size(),sampling_time_vector.data());
+	}
+	for (Alembic::Abc::uint8_t motion_index=0;motion_index<motion_sample_count;motion_index++)
+	{
+		RiPointsGeneralPolygons(npolys,
+								const_cast<RtInt *>(i_renderman_mesh_data._nloops_data.data()),
+								const_cast<RtInt *>(i_renderman_mesh_data._nvertices_data.data()),
+								const_cast<RtInt *>(i_renderman_mesh_data._vertices_data.data()),
+								RI_P,i_renderman_mesh_data._P_data_array[motion_index].origin(),
+								RI_NULL);
+	}
+
+	if (has_multiple_samples)
+	{
+		RiMotionEnd();
+	}
 
 }
 
@@ -17,6 +41,11 @@ void write_renderman_mesh_data_to_file(const RendermanMeshData& i_renderman_mesh
 									   float 				    i_shutter_open,
 									   float 				    i_shutter_close)
 {
+	RiBegin(i_renderman_filename.c_str());
+
+	create_renderman_polymesh_node(i_renderman_mesh_data,i_shutter_open,i_shutter_close);
+
+	RiEnd();
 
 }
 
@@ -42,7 +71,7 @@ void create_renderman_points_node(const RendermanPointsData& i_renderman_points_
 								  float                      i_shutter_close)
 {
 	Alembic::Abc::uint8_t motion_sample_count = i_renderman_points_data._P_data_array.shape()[0];
-	Alembic::Abc::uint8_t points_count = i_renderman_points_data._P_data_array.shape()[1];
+	Alembic::Abc::uint64_t points_count = i_renderman_points_data._P_data_array.shape()[1];
 	std::cout << boost::format("motion_sample_count = %1%") % int(motion_sample_count) << std::endl;
 	std::cout << boost::format("points_count = %1%") % int(points_count) << std::endl;
 	bool has_multiple_samples = motion_sample_count > 1;
@@ -60,7 +89,7 @@ void create_renderman_points_node(const RendermanPointsData& i_renderman_points_
 		for (Alembic::Abc::uint8_t motion_index=0;motion_index<motion_sample_count;motion_index++)
 		{
 			RiPoints(points_count,RI_P,i_renderman_points_data._P_data_array[motion_index].origin(),
-					 RI_CONSTANTWIDTH,&(i_renderman_points_data._widths_data[0]),
+					 RI_CONSTANTWIDTH,i_renderman_points_data._widths_data.data(),
 					 RI_NULL);
 		}
 	}
