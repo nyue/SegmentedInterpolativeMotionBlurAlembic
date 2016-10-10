@@ -37,22 +37,14 @@ void write_renderman_mesh_data_to_wavefront_sequence(const RendermanMeshData& i_
  * Points
  ******************************************************************************/
 
-//void build_points_for_renderman_rib_from_interim_points(const AlembicPointsDataIndexedMap* i_previous_interim_points,
-//														const AlembicPointsDataIndexedMap* i_current_interim_points,
-//														const AlembicPointsDataIndexedMap* i_next_interim_points,
-//														float							   i_relative_shutter_open,
-//														float							   i_relative_shutter_close,
-//														Alembic::Abc::uint8_t              i_motion_sample_count,
-//														RendermanPointsData&			   o_renderman_points)
-//{
-//
-//}
-
 void create_renderman_points_node(const RendermanPointsData& i_renderman_points_data,
 								  float                      i_shutter_open,
 								  float                      i_shutter_close)
 {
 	Alembic::Abc::uint8_t motion_sample_count = i_renderman_points_data._P_data_array.shape()[0];
+	Alembic::Abc::uint8_t points_count = i_renderman_points_data._P_data_array.shape()[1];
+	std::cout << boost::format("motion_sample_count = %1%") % int(motion_sample_count) << std::endl;
+	std::cout << boost::format("points_count = %1%") % int(points_count) << std::endl;
 	bool has_multiple_samples = motion_sample_count > 1;
 	RtInt npoints = i_renderman_points_data._ids_data.size();
 	bool use_constantwidth = i_renderman_points_data._widths_data.size() != i_renderman_points_data._ids_data.size();
@@ -65,9 +57,21 @@ void create_renderman_points_node(const RendermanPointsData& i_renderman_points_
 
 	if (use_constantwidth)
 	{
+		for (Alembic::Abc::uint8_t motion_index=0;motion_index<motion_sample_count;motion_index++)
+		{
+			RiPoints(points_count,RI_P,i_renderman_points_data._P_data_array[motion_index].origin(),
+					 RI_CONSTANTWIDTH,&(i_renderman_points_data._widths_data[0]),
+					 RI_NULL);
+		}
 	}
 	else
 	{
+		for (Alembic::Abc::uint8_t motion_index=0;motion_index<motion_sample_count;motion_index++)
+		{
+			RiPoints(points_count,RI_P,i_renderman_points_data._P_data_array[motion_index].origin(),
+					 RI_WIDTH,i_renderman_points_data._widths_data.data(),
+					 RI_NULL);
+		}
 
 	}
 
