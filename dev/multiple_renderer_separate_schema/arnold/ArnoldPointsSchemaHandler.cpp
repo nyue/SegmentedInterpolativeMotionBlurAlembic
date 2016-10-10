@@ -1,5 +1,6 @@
 #include "ArnoldPointsSchemaHandler.h"
 #include "ArnoldUtils.h"
+#include "Utils.h"
 
 ArnoldPointsSchemaHandler::ArnoldPointsSchemaHandler()
 {
@@ -32,7 +33,7 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     points.getSchema().get( current_sample, current_sample_selector );
     AlembicPointsDataIndexedMap current_interim_points;
 
-    build_interim_points_for_arnold_ass(&current_sample,current_interim_points);
+    build_interim_points(&current_sample,current_interim_points);
 
     if (requested_index == 0)
     {
@@ -43,7 +44,7 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     	points.getSchema().get( next_sample, next_sample_selector );
 
         AlembicPointsDataIndexedMap next_interim_points;
-        build_interim_points_for_arnold_ass(&next_sample,next_interim_points);
+        build_interim_points(&next_sample,next_interim_points);
 
     	ArnoldPointsData arnold_points_data;
     	build_points_for_arnold_ass_from_interim_points(0,
@@ -68,7 +69,7 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     	points.getSchema().get( previous_sample, previous_sample_selector );
 
         AlembicPointsDataIndexedMap previous_interim_points;
-        build_interim_points_for_arnold_ass(&previous_sample,previous_interim_points);
+        build_interim_points(&previous_sample,previous_interim_points);
 
     	ArnoldPointsData arnold_points_data;
     	build_points_for_arnold_ass_from_interim_points(&previous_interim_points,
@@ -93,7 +94,7 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     	points.getSchema().get( previous_sample, previous_sample_selector );
 
         AlembicPointsDataIndexedMap previous_interim_points;
-        build_interim_points_for_arnold_ass(&previous_sample,previous_interim_points);
+        build_interim_points(&previous_sample,previous_interim_points);
 
         // ==============
 
@@ -103,7 +104,7 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     	points.getSchema().get( next_sample, next_sample_selector );
 
         AlembicPointsDataIndexedMap next_interim_points;
-        build_interim_points_for_arnold_ass(&next_sample,next_interim_points);
+        build_interim_points(&next_sample,next_interim_points);
 
         // ==================
     	ArnoldPointsData arnold_points_data;

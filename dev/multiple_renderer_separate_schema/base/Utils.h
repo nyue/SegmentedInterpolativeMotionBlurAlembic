@@ -1,11 +1,16 @@
 #pragma once
+
 #include "Types.h"
+#include <Alembic/AbcGeom/All.h>
 
 bool build_even_motion_relative_time_samples(float           i_relative_shutter_open,
 		float           i_relative_shutter_close,
 		Alembic::Abc::uint8_t          i_motion_sample_count,
 		FloatContainer& o_earlier_sampling_time_vector,
 		FloatContainer& o_later_sampling_time_vector);
+
+void build_interim_points(const Alembic::AbcGeom::IPointsSchema::Sample* i_sample,
+						  AlembicPointsDataIndexedMap&                   o_interim_points);
 
 template <typename T> void interpolate(const Imath::Vec3<T>& P1,
 									   const Imath::Vec3<T>& T1,

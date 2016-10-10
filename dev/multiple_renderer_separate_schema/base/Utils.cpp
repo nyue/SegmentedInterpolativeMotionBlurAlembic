@@ -28,6 +28,33 @@ bool build_even_motion_relative_time_samples(float           i_relative_shutter_
 
 }
 
+void build_interim_points(const Alembic::AbcGeom::IPointsSchema::Sample* i_sample,
+						  AlembicPointsDataIndexedMap&                   o_interim_points)
+{
+	Alembic::AbcGeom::P3fArraySamplePtr positions = i_sample->getPositions();
+	Alembic::AbcGeom::V3fArraySamplePtr velocities = i_sample->getVelocities();
+	Alembic::AbcGeom::UInt64ArraySamplePtr ids = i_sample->getIds();
+	size_t num_positions = positions->size();
+	size_t num_velocities = velocities->size();
+	size_t num_ids = ids->size();
+	assert ( num_positions == num_ids );
+	assert ( num_velocities == num_ids );
+	std::pair<AlembicPointsDataIndexedMap::iterator,bool> ret;
+	for (size_t positions_index = 0;positions_index < num_positions; positions_index++)
+	{
+		ret = o_interim_points.insert(AlembicPointsDataIndexedMap::value_type(
+				ids->get()[positions_index],
+				AlembicPointsData(Imath::V3f(positions->get()[positions_index].x,positions->get()[positions_index].y,positions->get()[positions_index].z),
+						Imath::V3f(velocities->get()[positions_index].x,velocities->get()[positions_index].y,velocities->get()[positions_index].z))));
+		if (!ret.second)
+		{
+			std::cerr << "Failed to insert into map" << std::endl;
+			return;
+		}
+	}
+	// std::cout << boost::format("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX o_interim_points = %1%") % o_interim_points.size() << std::endl;
+}
+
 // == Emacs ================
 // -------------------------
 // Local variables:
