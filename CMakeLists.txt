@@ -5,7 +5,7 @@ PROJECT ( Simba )
 SET ( SIMBA_ENABLE_ALEMBIC_HDF5 OFF CACHE STRING "Enabling Alembic with HDF5 variable defaulting to 'OFF'")
 
 FIND_PACKAGE ( ILMBase REQUIRED )
-FIND_PACKAGE ( Boost 1.52 REQUIRED unit_test_framework )
+FIND_PACKAGE ( Boost 1.52 REQUIRED unit_test_framework serialization )
 FIND_PACKAGE ( Alembic REQUIRED )
 IF ( SIMBA_ENABLE_ALEMBIC_HDF5 )
   FIND_PACKAGE ( HDF5 REQUIRED )
