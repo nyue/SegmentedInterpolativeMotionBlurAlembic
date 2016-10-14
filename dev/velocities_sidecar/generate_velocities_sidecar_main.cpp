@@ -12,24 +12,48 @@
 
 #include <vector>
 #include <boost/format.hpp>
+#include <boost/program_options.hpp>
 #include <OpenEXR/ImathVec.h>
 
 #include "VelocitySideCar.h"
 
+namespace po = boost::program_options;
+
 int main(int argc, char** argv)
 {
-    std::string filename("non-intrusive_serialization_filename");
-    std::ofstream ofs(filename.c_str());
+	try {
+		std::string alembic_file;
+		std::string velocity_file;
+		po::options_description desc("Allowed options");
+		desc.add_options()
+    		("help", "produce help message")
+    		("abc", po::value<std::string>(&alembic_file),
+    				"name of alembic file")
+			("vsc", po::value<std::string>(&velocity_file),
+					"name of velocity file")
+    				;
 
-    const VelocitySideCar vsc;
-    // save data to archive
-    {
-    	boost::archive::binary_oarchive oa(ofs);
+		po::variables_map vm;
+		po::store(po::parse_command_line(argc, argv, desc), vm);
+		po::notify(vm);
 
-    	// write class instance to archive
-    	oa << vsc;
-    	// archive and stream closed when destructors are called
-    }
-
+		if (vm.count("help")) {
+			std::cout << desc << "\n";
+			return 1;
+		}
+		if (vm.count("abc")) {
+			std::cout << "alembic_file variable " << alembic_file.c_str() << std::endl;
+		}
+		if (vm.count("vsc")) {
+			std::cout << "velocity_file variable " << velocity_file.c_str() << std::endl;
+		}
+	}
+	catch(std::exception& e) {
+		std::cerr << "error: " << e.what() << "\n";
+		return 1;
+	}
+	catch(...) {
+		std::cerr << "Exception of unknown type!\n";
+	}
 	return 0;
 }
