@@ -4,6 +4,7 @@ PROJECT ( Simba )
 
 SET ( SIMBA_ENABLE_ALEMBIC_HDF5 OFF CACHE STRING "Enabling Alembic with HDF5 variable defaulting to 'OFF'")
 
+FIND_PACKAGE ( OpenSSL REQUIRED )
 FIND_PACKAGE ( ILMBase REQUIRED )
 FIND_PACKAGE ( Boost 1.52 REQUIRED program_options unit_test_framework serialization )
 FIND_PACKAGE ( Alembic REQUIRED )
