@@ -1,14 +1,20 @@
 INCLUDE_DIRECTORIES ( ../base )
 
-ADD_EXECUTABLE ( multiple_renderer_separate_schema_renderman
+ADD_LIBRARY ( procedural_multiple_renderer_separate_schema_renderman SHARED
   RendermanPointsSchemaHandler.cpp
   RendermanPolyMeshSchemaHandler.cpp
   RendermanUtils.cpp
   abc2rib_separate_schema_main.cpp
   )
 
-TARGET_LINK_LIBRARIES ( multiple_renderer_separate_schema_renderman
-  SimbaBase
+TARGET_LINK_LIBRARIES ( procedural_multiple_renderer_separate_schema_renderman
+  ProceduralSimbaBase
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   ${DELIGHT_3delight_LIBRARY}
   )
+
+SET_TARGET_PROPERTIES ( procedural_multiple_renderer_separate_schema_renderman
+	PROPERTIES
+    PREFIX ""
+    )
+ 

@@ -1,4 +1,4 @@
-ADD_LIBRARY ( SimbaBase STATIC
+ADD_LIBRARY ( ProceduralSimbaBase STATIC
   AbstractGeomSchemaHandler.cpp
   AbstractPointsSchemaHandler.cpp
   AbstractPolyMeshSchemaHandler.cpp
