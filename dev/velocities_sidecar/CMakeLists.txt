@@ -11,6 +11,7 @@ TARGET_LINK_LIBRARIES ( generate_velocities_sidecar
   ${Boost_LIBRARIES}
   ${CRYPTO_LIBRARY}
   ${OPENSSL_SSL_LIBRARY}
+  ${OPENSSL_CRYPTO_LIBRARY}
   )
 
 ADD_EXECUTABLE ( read_velocities_sidecar
@@ -22,4 +23,5 @@ TARGET_LINK_LIBRARIES ( read_velocities_sidecar
   ${Boost_LIBRARIES}
   ${CRYPTO_LIBRARY}
   ${OPENSSL_SSL_LIBRARY}
+  ${OPENSSL_CRYPTO_LIBRARY}
   )
