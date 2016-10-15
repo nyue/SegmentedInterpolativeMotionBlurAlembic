@@ -15,10 +15,10 @@ RendermanPointsSchemaHandler::~RendermanPointsSchemaHandler()
 void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 											  Alembic::Abc::index_t      i_start_frame_number,
 											  Alembic::Abc::index_t      i_requested_frame_number,
-											  const std::string&         i_renderman_filename,
 											  Alembic::Abc::uint8_t 	 i_motion_samples,
 											  float          			 i_relative_shutter_open,
-											  float          			 i_relative_shutter_close) const
+											  float          			 i_relative_shutter_close,
+											  const char*                i_renderer_filename) const
 {
 
     size_t num_samples = points.getSchema().getNumSamples();
@@ -56,10 +56,11 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		renderman_points_data._P_data_array,
 																		renderman_points_data._ids_data,
 																		renderman_points_data._widths_data);
-    	write_renderman_points_data_to_file(renderman_points_data,
-											i_renderman_filename,
-											i_relative_shutter_open,
-											i_relative_shutter_close);
+    	if (i_renderer_filename)
+    		write_renderman_points_data_to_file(renderman_points_data,
+    				i_renderer_filename,
+					i_relative_shutter_open,
+					i_relative_shutter_close);
 
     }
     else if (requested_index == last_sample_index)
@@ -84,10 +85,11 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		renderman_points_data._P_data_array,
 																		renderman_points_data._ids_data,
 																		renderman_points_data._widths_data);
-    	write_renderman_points_data_to_file(renderman_points_data,
-											i_renderman_filename,
-											i_relative_shutter_open,
-											i_relative_shutter_close);
+    	if (i_renderer_filename)
+    		write_renderman_points_data_to_file(renderman_points_data,
+    				i_renderer_filename,
+					i_relative_shutter_open,
+					i_relative_shutter_close);
 
     }
     else
@@ -127,10 +129,11 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																									   renderman_points_data._ids_data,
 																									   renderman_points_data._widths_data,
 																									   "points_per_sample.%04d.csv");
-    	write_renderman_points_data_to_file(renderman_points_data,
-											i_renderman_filename,
-											i_relative_shutter_open,
-											i_relative_shutter_close);
+    	if (i_renderer_filename)
+    		write_renderman_points_data_to_file(renderman_points_data,
+    				i_renderer_filename,
+					i_relative_shutter_open,
+					i_relative_shutter_close);
 
     }
 

@@ -36,7 +36,7 @@ void AbstractPolyMeshSchemaHandler::ProcessPolyMesh(const Alembic::Abc::IObject&
 		{
 			size_t start_frame = ts_ptr->getStoredTimes()[0] / tpc;
 			std::string renderman_ass_filename = (boost::format("%s.%04d.rib") % unique_object_path % i_requested_index).str();
-			EmitPolyMesh(mesh,start_frame,i_requested_index,renderman_ass_filename,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
+			EmitPolyMesh(mesh,start_frame,i_requested_index,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
 		}
 	}
 }

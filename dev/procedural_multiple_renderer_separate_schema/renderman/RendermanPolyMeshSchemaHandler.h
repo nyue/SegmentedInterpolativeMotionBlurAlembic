@@ -13,10 +13,10 @@ protected:
 	virtual void EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmesh,
 							  Alembic::Abc::index_t        i_start_frame_number,
 							  Alembic::Abc::index_t        i_requested_frame_number,
-							  const std::string&           i_renderman_filename,
 							  Alembic::Abc::uint8_t 	   i_motion_samples,
 							  float          			   i_relative_shutter_open,
-							  float          			   i_relative_shutter_close) const;
+							  float          			   i_relative_shutter_close,
+							  const char*                  i_renderer_filename) const;
 private:
 	void build_polymesh_for_renderman_rib(const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_previous_sample,
 										  const Alembic::AbcGeom::IPolyMeshSchema::Sample* i_current_sample,

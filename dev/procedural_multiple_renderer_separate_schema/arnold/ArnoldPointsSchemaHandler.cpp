@@ -15,10 +15,10 @@ ArnoldPointsSchemaHandler::~ArnoldPointsSchemaHandler()
 void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 										   Alembic::Abc::index_t      i_start_frame_number,
 										   Alembic::Abc::index_t      i_requested_frame_number,
-										   const std::string&         i_arnold_filename,
 										   Alembic::Abc::uint8_t      i_motion_samples,
 										   float          			  i_relative_shutter_open,
-										   float          			  i_relative_shutter_close) const
+										   float          			  i_relative_shutter_close,
+										   const char*                i_renderer_filename) const
 {
 
     size_t num_samples = points.getSchema().getNumSamples();
@@ -56,9 +56,9 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		arnold_points_data._points_data_array,
 																		arnold_points_data._ids_data,
 																		arnold_points_data._radius_data);
-
+    	if (i_renderer_filename)
     	write_arnold_points_data_to_file(arnold_points_data,
-    									 i_arnold_filename,
+    			i_renderer_filename,
 										 i_relative_shutter_open,
 										 i_relative_shutter_close);
 
@@ -84,9 +84,9 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		arnold_points_data._points_data_array,
 																		arnold_points_data._ids_data,
 																		arnold_points_data._radius_data);
-
+    	if (i_renderer_filename)
     	write_arnold_points_data_to_file(arnold_points_data,
-    									 i_arnold_filename,
+    			i_renderer_filename,
 										 i_relative_shutter_open,
 										 i_relative_shutter_close);
 
@@ -125,8 +125,9 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		arnold_points_data._radius_data);
 
     	// write_arnold_points_data_to_csv_sequence(arnold_points_data,"points_per_sample.%04d.csv");
+    	if (i_renderer_filename)
     	write_arnold_points_data_to_file(arnold_points_data,
-    									 i_arnold_filename,
+    			i_renderer_filename,
 										 i_relative_shutter_open,
 										 i_relative_shutter_close);
 

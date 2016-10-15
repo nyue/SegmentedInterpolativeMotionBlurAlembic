@@ -15,10 +15,10 @@ RendermanPolyMeshSchemaHandler::~RendermanPolyMeshSchemaHandler()
 void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmesh,
 												  Alembic::Abc::index_t        i_start_frame_number,
 												  Alembic::Abc::index_t        i_requested_frame_number,
-												  const std::string&           i_renderman_filename,
 												  Alembic::Abc::uint8_t 	   i_motion_samples,
 												  float          			   i_relative_shutter_open,
-												  float          			   i_relative_shutter_close) const
+												  float          			   i_relative_shutter_close,
+												  const char*                  i_renderer_filename) const
 {
 
     size_t num_samples = pmesh.getSchema().getNumSamples();
@@ -48,10 +48,10 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
 										 i_relative_shutter_close,
 										 i_motion_samples,
 										 renderman_mesh_data);
-    	write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderman_filename,
-										  i_relative_shutter_open,
-										  i_relative_shutter_close);
-
+    	if (i_renderer_filename)
+    		write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderer_filename,
+    				i_relative_shutter_open,
+					i_relative_shutter_close);
     }
     else if (requested_index == last_sample_index)
     {
@@ -69,9 +69,10 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
 										 i_relative_shutter_close,
 										 i_motion_samples,
 										 renderman_mesh_data);
-    	write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderman_filename,
-										  i_relative_shutter_open,
-										  i_relative_shutter_close);
+    	if (i_renderer_filename)
+			write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderer_filename,
+											  i_relative_shutter_open,
+											  i_relative_shutter_close);
 
     }
     else
@@ -96,9 +97,10 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
 										 i_relative_shutter_close,
 										 i_motion_samples,
 										 renderman_mesh_data);
-    	write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderman_filename,
-										  i_relative_shutter_open,
-										  i_relative_shutter_close);
+    	if (i_renderer_filename)
+			write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderer_filename,
+											  i_relative_shutter_open,
+											  i_relative_shutter_close);
     	write_renderman_mesh_data_to_wavefront_sequence(renderman_mesh_data,"mesh_per_sample.%04d.obj");
     }
 

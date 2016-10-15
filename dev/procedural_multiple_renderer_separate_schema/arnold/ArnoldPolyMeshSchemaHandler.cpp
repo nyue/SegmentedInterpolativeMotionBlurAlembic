@@ -13,12 +13,12 @@ ArnoldPolyMeshSchemaHandler::~ArnoldPolyMeshSchemaHandler()
 }
 
 void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmesh,
-	   	   	   Alembic::Abc::index_t        i_start_frame_number,
-	   Alembic::Abc::index_t        i_requested_frame_number,
-	   const std::string&           i_arnold_filename,
-	   Alembic::Abc::uint8_t 						i_motion_samples,
-	   float          				i_relative_shutter_open,
-	   float          				i_relative_shutter_close) const
+											   Alembic::Abc::index_t        i_start_frame_number,
+											   Alembic::Abc::index_t        i_requested_frame_number,
+											   Alembic::Abc::uint8_t 		i_motion_samples,
+											   float          				i_relative_shutter_open,
+											   float          				i_relative_shutter_close,
+											   const char*                  i_renderer_filename) const
 {
 
     size_t num_samples = pmesh.getSchema().getNumSamples();
@@ -48,7 +48,8 @@ void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmes
 									  i_relative_shutter_close,
 									  i_motion_samples,
 									  arnold_mesh_data);
-    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
+    	if (i_renderer_filename)
+    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_renderer_filename,
 				  i_relative_shutter_open,
 				  i_relative_shutter_close);
 
@@ -69,7 +70,8 @@ void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmes
 									  i_relative_shutter_close,
 									  i_motion_samples,
 									  arnold_mesh_data);
-    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
+    	if (i_renderer_filename)
+    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_renderer_filename,
 				  i_relative_shutter_open,
 				  i_relative_shutter_close);
 
@@ -101,10 +103,11 @@ void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmes
 									  i_relative_shutter_close,
 									  i_motion_samples,
 									  arnold_mesh_data);
-    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_arnold_filename,
+    	if (i_renderer_filename)
+    	write_arnold_mesh_data_to_file(arnold_mesh_data,i_renderer_filename,
     								   i_relative_shutter_open,
 									   i_relative_shutter_close);
-    	write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"mesh_per_sample.%04d.obj");
+    	// write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"mesh_per_sample.%04d.obj");
     }
 
 }
