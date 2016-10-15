@@ -18,7 +18,7 @@ protected:
 	virtual void EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmesh,
   	   	   	   	   	   	   	  Alembic::Abc::index_t        i_start_frame_number,
 							  Alembic::Abc::index_t        i_requested_frame_number,
-							  const std::string&           i_arnold_filename,
+							  const std::string&           i_renderman_filename,
 							  Alembic::Abc::uint8_t        i_motion_samples,
 							  float          			   i_relative_shutter_open,
 							  float          			   i_relative_shutter_close) const = 0;

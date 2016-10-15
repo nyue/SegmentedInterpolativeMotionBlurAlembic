@@ -1,5 +1,10 @@
 #include "RendermanPointsSchemaHandler.h"
 #include "RendermanPolyMeshSchemaHandler.h"
+#include <String2ArgcArgv.h>
+#include <boost/program_options.hpp>
+#include <boost/shared_ptr.hpp>
+
+namespace po = boost::program_options;
 
 void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 								  const StringContainer&       i_hierachy_path,
@@ -45,29 +50,96 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 	}
 }
 
-int main(int argc, char** argv)
+int EmitGeometry(int argc, const char** argv)
 {
-    if (argc != 4)
-    {
-        std::cerr << "Usage : " << argv[0] << " <Frame (integer)> <Alembic Archive> <Renderman RIB>" << std::endl;
-        return 1;
-    }
-    size_t frame_to_export(atoi(argv[1]));
-    std::string alembic_fileName(argv[2]);
-    std::string ass_fileName(argv[3]);
-    Alembic::AbcGeom::IArchive alembic_archive;
-    alembic_archive = Alembic::AbcGeom::IArchive( Alembic::AbcCoreOgawa::ReadArchive(), alembic_fileName );
+	try {
 
-	StringContainer       hierachy_path;
-	float relative_shutter_open = -0.25f;
-	float relative_shutter_close = 0.25f;
-	Alembic::Abc::uint8_t num_motion_samples = 3;
+	    size_t                frame_to_export = 1;
+	    std::string           alembic_fileName;
+	    std::string           velocity_fileName;
+	    std::string           geometry_filter;
+		float                 relative_shutter_open = -0.25f;
+		float                 relative_shutter_close = 0.25f;
+		size_t                num_motion_samples = 3;
 
-	locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
+		po::options_description desc("Allowed options");
+		desc.add_options()
+    		("version", "print version string")
+    		("help", "produce help message")
+    		("samples,s", po::value<size_t>(&num_motion_samples),
+    				"number of samples to generate [default 3]")
+    		("open,o", po::value<float>(&relative_shutter_open),
+    				"relative shutter open [default -0.25]")
+    		("close,c", po::value<float>(&relative_shutter_close),
+    				"relative shutter close [default 0.25]")
+    		("frame,f", po::value<size_t>(&frame_to_export),
+    				"frame to export [default 1]")
+    		("abc,a", po::value<std::string>(&alembic_fileName),
+    				"alembic file")
+			("velocity,v", po::value<std::string>(&velocity_fileName),
+					"velocity file")
+    				;
+
+		po::variables_map vm;
+		po::store(po::parse_command_line(argc, argv, desc), vm);
+		po::notify(vm);
+
+		if (vm.count("help") || alembic_fileName.empty()) {
+			std::cout << desc << "\n";
+			return 1;
+		}
 
 
-    return 0;
+		Alembic::AbcCoreFactory::IFactory factory;
+		Alembic::AbcCoreFactory::IFactory::CoreType oType;
+
+	    Alembic::AbcGeom::IArchive alembic_archive(factory.getArchive(alembic_fileName, oType));
+
+		StringContainer       hierachy_path;
+		locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
+	}
+	catch(std::exception& e) {
+		std::cerr << "error: " << e.what() << "\n";
+		return 1;
+	}
+	catch(...) {
+		std::cerr << "Exception of unknown type!\n";
+	}
+	return 0;
 }
+
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
+RtPointer ConvertParameters(RtString paramstr)
+{
+	std::string param_std_string = (boost::format("dummy %1%") % paramstr).str();
+	std::cout << boost::format("param_std_string = '%1%'") % param_std_string << std::endl;
+	PI::String2ArgcArgv* s2aa = new PI::String2ArgcArgv(param_std_string);
+
+	/* return the blind data pointer */
+	return (RtPointer)s2aa;
+}
+
+RtVoid Subdivide(RtPointer data, RtFloat detail)
+{
+	PI::String2ArgcArgv* s2aa = (PI::String2ArgcArgv *)data;
+
+	EmitGeometry(s2aa->argc(), s2aa->argv());
+
+}
+
+RtVoid Free(RtPointer data)
+{
+	PI::String2ArgcArgv* s2aa = (PI::String2ArgcArgv *)data;
+	delete s2aa;
+}
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}
+#endif
+
 
 // == Emacs ================
 // -------------------------
