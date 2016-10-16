@@ -57,10 +57,9 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		renderman_points_data._P_data_array,
 																		renderman_points_data._ids_data,
 																		renderman_points_data._widths_data);
-    	write_renderman_points_data_to_file(renderman_points_data,
-    			i_renderer_filename,
-				i_relative_shutter_open,
-				i_relative_shutter_close);
+    	emit_renderman_points_data(renderman_points_data,
+								   i_relative_shutter_open,
+								   i_relative_shutter_close);
 
     }
     else if (requested_index == last_sample_index)
@@ -85,10 +84,9 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		renderman_points_data._P_data_array,
 																		renderman_points_data._ids_data,
 																		renderman_points_data._widths_data);
-    	write_renderman_points_data_to_file(renderman_points_data,
-    			i_renderer_filename,
-				i_relative_shutter_open,
-				i_relative_shutter_close);
+    	emit_renderman_points_data(renderman_points_data,
+								   i_relative_shutter_open,
+								   i_relative_shutter_close);
 
     }
     else
@@ -128,10 +126,9 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																									   renderman_points_data._ids_data,
 																									   renderman_points_data._widths_data,
 																									   "points_per_sample.%04d.csv");
-    	write_renderman_points_data_to_file(renderman_points_data,
-    			i_renderer_filename,
-				i_relative_shutter_open,
-				i_relative_shutter_close);
+    	emit_renderman_points_data(renderman_points_data,
+    							   i_relative_shutter_open,
+								   i_relative_shutter_close);
 
     }
 

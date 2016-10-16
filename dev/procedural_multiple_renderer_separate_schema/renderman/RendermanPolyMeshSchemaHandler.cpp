@@ -49,9 +49,9 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
 										 i_relative_shutter_close,
 										 i_motion_samples,
 										 renderman_mesh_data);
-    	write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderer_filename,
-    			i_relative_shutter_open,
-				i_relative_shutter_close);
+    	emit_renderman_mesh_data(renderman_mesh_data,
+    							 i_relative_shutter_open,
+								 i_relative_shutter_close);
     }
     else if (requested_index == last_sample_index)
     {
@@ -69,9 +69,9 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
 										 i_relative_shutter_close,
 										 i_motion_samples,
 										 renderman_mesh_data);
-    	write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderer_filename,
-    			i_relative_shutter_open,
-				i_relative_shutter_close);
+    	emit_renderman_mesh_data(renderman_mesh_data,
+    							 i_relative_shutter_open,
+								 i_relative_shutter_close);
 
     }
     else
@@ -96,9 +96,9 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
 										 i_relative_shutter_close,
 										 i_motion_samples,
 										 renderman_mesh_data);
-    	write_renderman_mesh_data_to_file(renderman_mesh_data,i_renderer_filename,
-    			i_relative_shutter_open,
-				i_relative_shutter_close);
+    	emit_renderman_mesh_data(renderman_mesh_data,
+    							 i_relative_shutter_open,
+								 i_relative_shutter_close);
     	write_renderman_mesh_data_to_wavefront_sequence(renderman_mesh_data,"mesh_per_sample.%04d.obj");
     }
 

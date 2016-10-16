@@ -8,10 +8,10 @@ void create_renderman_polymesh_node(const RendermanMeshData& i_renderman_mesh_da
 									float                    i_shutter_open,
 									float                    i_shutter_close);
 
-void write_renderman_mesh_data_to_file(const RendermanMeshData& i_renderman_mesh_data,
-									   const char*              i_renderman_filename,
+void emit_renderman_mesh_data(const RendermanMeshData& i_renderman_mesh_data,
 									   float 				    i_shutter_open,
-									   float 				    i_shutter_close);
+									   float 				    i_shutter_close,
+									   const char*              i_renderman_filename = 0);
 
 void write_renderman_mesh_data_to_wavefront_file(const RendermanMeshData&  i_renderman_mesh_data,
 												 V3fSamplingArray2D::index i_sample_index,
@@ -31,10 +31,10 @@ void write_renderman_mesh_data_to_wavefront_sequence(const RendermanMeshData& i_
 void create_renderman_points_node(const RendermanPointsData& i_renderman_points_data,
 								  float                      i_shutter_open,
 								  float                      i_shutter_close);
-void write_renderman_points_data_to_file(const RendermanPointsData& i_renderman_points_data,
-		 	 	 	 	 	 	 	 	 const char*                i_renderman_filename,
+void emit_renderman_points_data(const RendermanPointsData& i_renderman_points_data,
 										 float 				        i_shutter_open,
-										 float 				        i_shutter_close);
+										 float 				        i_shutter_close,
+		 	 	 	 	 	 	 	 	 const char*                i_renderman_filename = 0);
 // == Emacs ================
 // -------------------------
 // Local variables:

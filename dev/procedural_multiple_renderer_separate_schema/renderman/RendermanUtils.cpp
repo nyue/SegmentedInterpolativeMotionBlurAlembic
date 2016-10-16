@@ -37,10 +37,10 @@ void create_renderman_polymesh_node(const RendermanMeshData& i_renderman_mesh_da
 
 }
 
-void write_renderman_mesh_data_to_file(const RendermanMeshData& i_renderman_mesh_data,
-									   const char*              i_renderman_filename,
-									   float 				    i_shutter_open,
-									   float 				    i_shutter_close)
+void emit_renderman_mesh_data(const RendermanMeshData& i_renderman_mesh_data,
+							  float 				   i_shutter_open,
+							  float 				   i_shutter_close,
+							  const char*              i_renderman_filename)
 {
 	if (i_renderman_filename)
 		RiBegin(i_renderman_filename);
@@ -113,10 +113,10 @@ void create_renderman_points_node(const RendermanPointsData& i_renderman_points_
 	}
 }
 
-void write_renderman_points_data_to_file(const RendermanPointsData& i_renderman_points_data,
-										 const char*                i_renderman_filename,
-										 float 				        i_shutter_open,
-										 float 				        i_shutter_close)
+void emit_renderman_points_data(const RendermanPointsData& i_renderman_points_data,
+								float 				       i_shutter_open,
+								float 				       i_shutter_close,
+								const char*                i_renderman_filename)
 {
 	if (i_renderman_filename)
 		RiBegin(i_renderman_filename);
