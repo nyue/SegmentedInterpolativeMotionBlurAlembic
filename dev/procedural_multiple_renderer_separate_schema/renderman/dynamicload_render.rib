@@ -1,7 +1,7 @@
 ##RenderMan RIB-Structure 1.0
 #version 3.03
 
-Option "searchpath" "procedural" "/corp/projects/eng/nyue/projects/PI/SegmentedInterpolativeMotionBlurAlembic/build/dev/procedural_multiple_renderer_separate_schema/renderman/:@"
+Option "searchpath" "procedural" "./dev/procedural_multiple_renderer_separate_schema/renderman:@"
 
 FrameBegin 1
   

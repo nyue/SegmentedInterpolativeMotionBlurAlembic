@@ -1,0 +1,27 @@
+##RenderMan RIB-Structure 1.0
+#version 3.03
+
+Option "searchpath" "procedural" "./dev/procedural_multiple_renderer_separate_schema/renderman:@"
+
+FrameBegin 1
+  
+  Display "sphere.tif" "tiff" "rgb"
+  
+  Format 512 512 1
+  ShadingRate 1
+  
+  Projection "perspective" "fov" [40.11]
+  
+  WorldBegin
+  
+    LightSource "distantlight" 1
+  
+    AttributeBegin
+      Surface "plastic"
+      Translate 0 0 10
+      Procedural "RunProgram" [ "program_multiple_renderer_separate_schema_renderman" "--abc /corp/home/nyue/deforming_grid_frame_range_95_97.abc --frame 96 --samples 3"] [-3 3 -3 3 -3 3]
+    AttributeEnd
+  	
+  WorldEnd
+
+FrameEnd

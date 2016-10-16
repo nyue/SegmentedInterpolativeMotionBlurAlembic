@@ -3,6 +3,7 @@
 #include <String2ArgcArgv.h>
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
+#include <stdio.h> // required when building as procedural "RunProgram"
 
 namespace po = boost::program_options;
 
@@ -140,6 +141,31 @@ RtVoid Free(RtPointer data)
 }
 #endif
 
+/*!
+ * \note This should be harmless when compiled as a procedural "DynamicLoad" but will
+ *       be the entry point for procedural "RunProgram"
+ */
+int main(int argc, char** argv)
+{
+	RtFloat normalize_pixel_coverage;
+	char  args[BUFSIZ];
+
+	while(fgets(args,BUFSIZ,stdin) != NULL) {
+		std::string args_string(args);
+		args_string.erase(std::remove(args_string.begin(), args_string.end(), '\n'), args_string.end());
+		std::cerr << boost::format("args_string = '%1%'") % args_string << std::endl;
+		// std::cerr << boost::format("args = '%1%'") % args << std::endl;
+		PI::String2ArgcArgv s2aa(args_string);
+		sscanf(args, "%g", &normalize_pixel_coverage);
+		RiBegin("stdout");
+		RiAttributeBegin();
+		EmitGeometry(s2aa.argc(), s2aa.argv());
+		RiAttributeEnd();
+		RiArchiveRecord(RI_VERBATIM, "\377");
+		RiEnd();
+	}
+	return 0;
+}
 
 // == Emacs ================
 // -------------------------
