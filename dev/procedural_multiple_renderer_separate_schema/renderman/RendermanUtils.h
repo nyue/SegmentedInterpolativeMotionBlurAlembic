@@ -9,7 +9,7 @@ void create_renderman_polymesh_node(const RendermanMeshData& i_renderman_mesh_da
 									float                    i_shutter_close);
 
 void write_renderman_mesh_data_to_file(const RendermanMeshData& i_renderman_mesh_data,
-									   const std::string&       i_renderman_filename,
+									   const char*              i_renderman_filename,
 									   float 				    i_shutter_open,
 									   float 				    i_shutter_close);
 
@@ -32,7 +32,7 @@ void create_renderman_points_node(const RendermanPointsData& i_renderman_points_
 								  float                      i_shutter_open,
 								  float                      i_shutter_close);
 void write_renderman_points_data_to_file(const RendermanPointsData& i_renderman_points_data,
-										 const std::string&         i_renderman_filename,
+		 	 	 	 	 	 	 	 	 const char*                i_renderman_filename,
 										 float 				        i_shutter_open,
 										 float 				        i_shutter_close);
 // == Emacs ================

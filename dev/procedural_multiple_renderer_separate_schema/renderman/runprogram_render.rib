@@ -3,12 +3,15 @@
 
 Option "searchpath" "procedural" "./dev/procedural_multiple_renderer_separate_schema/renderman:@"
 
+Option "shutter" "float offset" 96
+
 FrameBegin 1
   
   Display "sphere.tif" "tiff" "rgb"
   
   Format 512 512 1
-  ShadingRate 1
+  ShadingRate 0.1
+  Shutter 95.75 96.25
   
   Projection "perspective" "fov" [40.11]
   
@@ -18,8 +21,9 @@ FrameBegin 1
   
     AttributeBegin
       Surface "plastic"
-      Translate 0 0 10
-      Procedural "RunProgram" [ "program_multiple_renderer_separate_schema_renderman" "--abc /corp/home/nyue/deforming_grid_frame_range_95_97.abc --frame 96 --samples 3"] [-3 3 -3 3 -3 3]
+      Translate 0 0 20 
+      Rotate 45 1 0 0
+      Procedural "RunProgram" [ "program_multiple_renderer_separate_schema_renderman" "--abc /corp/home/nyue/deforming_grid_frame_range_95_97.abc --frame 96 --samples 3"] [-30 30 -30 30 -30 30]
     AttributeEnd
   	
   WorldEnd

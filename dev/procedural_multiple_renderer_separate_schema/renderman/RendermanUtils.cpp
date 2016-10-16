@@ -38,15 +38,17 @@ void create_renderman_polymesh_node(const RendermanMeshData& i_renderman_mesh_da
 }
 
 void write_renderman_mesh_data_to_file(const RendermanMeshData& i_renderman_mesh_data,
-									   const std::string&       i_renderman_filename,
+									   const char*              i_renderman_filename,
 									   float 				    i_shutter_open,
 									   float 				    i_shutter_close)
 {
-	RiBegin(i_renderman_filename.c_str());
+	if (i_renderman_filename)
+		RiBegin(i_renderman_filename);
 
 	create_renderman_polymesh_node(i_renderman_mesh_data,i_shutter_open,i_shutter_close);
 
-	RiEnd();
+	if (i_renderman_filename)
+		RiEnd();
 
 }
 
@@ -112,15 +114,17 @@ void create_renderman_points_node(const RendermanPointsData& i_renderman_points_
 }
 
 void write_renderman_points_data_to_file(const RendermanPointsData& i_renderman_points_data,
-										 const std::string&         i_renderman_filename,
+										 const char*                i_renderman_filename,
 										 float 				        i_shutter_open,
 										 float 				        i_shutter_close)
 {
-	RiBegin(i_renderman_filename.c_str());
+	if (i_renderman_filename)
+		RiBegin(i_renderman_filename);
 
 	create_renderman_points_node(i_renderman_points_data,i_shutter_open,i_shutter_close);
 
-	RiEnd();
+	if (i_renderman_filename)
+		RiEnd();
 }
 
 // == Emacs ================

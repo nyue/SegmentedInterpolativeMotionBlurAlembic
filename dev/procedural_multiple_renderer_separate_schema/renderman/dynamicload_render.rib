@@ -18,8 +18,9 @@ FrameBegin 1
   
     AttributeBegin
       Surface "plastic"
-      Translate 0 0 10
-      Procedural "DynamicLoad" [ "procedural_multiple_renderer_separate_schema_renderman.so" "--abc /corp/home/nyue/deforming_grid_frame_range_95_97.abc --frame 96 --samples 3"] [-3 3 -3 3 -3 3]
+      Translate 0 0 20 
+      Rotate 45 1 0 0
+      Procedural "DynamicLoad" [ "procedural_multiple_renderer_separate_schema_renderman.so" "--abc /corp/home/nyue/deforming_grid_frame_range_95_97.abc --frame 96 --samples 3"] [-30 30 -30 30 -30 30]
     AttributeEnd
   	
   WorldEnd
