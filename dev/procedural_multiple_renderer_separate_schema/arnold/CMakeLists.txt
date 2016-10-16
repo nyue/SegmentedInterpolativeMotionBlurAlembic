@@ -1,6 +1,7 @@
 INCLUDE_DIRECTORIES ( ../base )
 
 ADD_LIBRARY ( procedural_multiple_renderer_separate_schema_arnold SHARED
+  ProcArgs.cpp
   ArnoldPointsSchemaHandler.cpp
   ArnoldPolyMeshSchemaHandler.cpp
   ArnoldUtils.cpp

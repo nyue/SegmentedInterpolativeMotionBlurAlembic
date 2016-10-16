@@ -9,10 +9,10 @@ void create_arnold_polymesh_node(const std::string&    name,
 								 float                 i_shutter_open,
 								 float                 i_shutter_close);
 
-void write_arnold_mesh_data_to_file(const ArnoldMeshData& i_arnold_mesh_data,
-									const std::string&    i_arnold_filename,
+void emit_arnold_mesh_data(const ArnoldMeshData& i_arnold_mesh_data,
 									float 				  i_shutter_open,
-									float 				  i_shutter_close);
+									float 				  i_shutter_close,
+									const char*           i_arnold_filename = 0);
 
 void write_arnold_mesh_data_to_wavefront_file(const ArnoldMeshData&     i_arnold_mesh_data,
 											  V3fSamplingArray2D::index i_sample_index,
@@ -27,10 +27,10 @@ void create_arnold_points_node(const std::string&    name,
 								 const ArnoldPointsData& i_arnold_points_data,
 								 float                 i_shutter_open,
 								 float                 i_shutter_close);
-void write_arnold_points_data_to_file(const ArnoldPointsData& i_arnold_points_data,
-									  const std::string&      i_arnold_filename,
+void emit_arnold_points_data(const ArnoldPointsData& i_arnold_points_data,
 									  float 				  i_shutter_open,
-									  float 				  i_shutter_close);
+									  float 				  i_shutter_close,
+									  const char*             i_arnold_filename = 0);
 
 // == Emacs ================
 // -------------------------

@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include <boost/format.hpp>
 #include <fstream>
+#include <ai.h>
 
 // =============================================================================
 // Arnold PolyMesh
@@ -38,25 +39,28 @@ void create_arnold_polymesh_node(const std::string&    name,
 
 }
 
-void write_arnold_mesh_data_to_file(const ArnoldMeshData& i_arnold_mesh_data,
-									const std::string&    i_arnold_filename,
-									float 				  i_shutter_open,
-									float 				  i_shutter_close)
+void emit_arnold_mesh_data(const ArnoldMeshData& i_arnold_mesh_data,
+						   float 				 i_shutter_open,
+						   float 				 i_shutter_close,
+						   const char*           i_arnold_filename)
 {
-	// start an Arnold session
-	AiBegin();
+	if (i_arnold_filename)
+		// start an Arnold session
+		AiBegin();
 
 	create_arnold_polymesh_node("test",i_arnold_mesh_data,i_shutter_open,i_shutter_close);
 
-	int write_mask = AI_NODE_ALL;
-	bool is_open_procs = false;
-	bool is_binary = false;
-	// Write out an .ass file
-	AiASSWrite(i_arnold_filename.c_str(), write_mask, is_open_procs, is_binary);
+	if (i_arnold_filename)
+	{
+		int write_mask = AI_NODE_ALL;
+		bool is_open_procs = false;
+		bool is_binary = false;
+		// Write out an .ass file
+		AiASSWrite(i_arnold_filename, write_mask, is_open_procs, is_binary);
 
-	// at this point we can shut down Arnold
-	AiEnd();
-
+		// at this point we can shut down Arnold
+		AiEnd();
+	}
 }
 
 void write_arnold_mesh_data_to_wavefront_file(const ArnoldMeshData&     i_arnold_mesh_data,
@@ -150,23 +154,26 @@ void create_arnold_points_node(const std::string&    name,
 	AiNodeSetArray(points, "deform_time_samples", AiArrayConvert(2,1,AI_TYPE_FLOAT,deform_time_samples));
 }
 
-void write_arnold_points_data_to_file(const ArnoldPointsData& i_arnold_points_data,
-									  const std::string&      i_arnold_filename,
-									  float 				  i_shutter_open,
-									  float 				  i_shutter_close)
+void emit_arnold_points_data(const ArnoldPointsData& i_arnold_points_data,
+							 float 				     i_shutter_open,
+							 float 				     i_shutter_close,
+							 const char*             i_arnold_filename)
 {
-	// start an Arnold session
-	AiBegin();
-//	AiMsgSetLogFileName("pm.log");
+	if (i_arnold_filename)
+		// start an Arnold session
+		AiBegin();
+
 
 	create_arnold_points_node("test",i_arnold_points_data,i_shutter_open,i_shutter_close);
 
-	// ... or you can write out an .ass file instead
-	AiASSWrite(i_arnold_filename.c_str(), AI_NODE_ALL, false, false);
+	if (i_arnold_filename)
+	{
+		// ... or you can write out an .ass file instead
+		AiASSWrite(i_arnold_filename, AI_NODE_ALL, false, false);
 
-	// at this point we can shut down Arnold
-	AiEnd();
-
+		// at this point we can shut down Arnold
+		AiEnd();
+	}
 
 }
 

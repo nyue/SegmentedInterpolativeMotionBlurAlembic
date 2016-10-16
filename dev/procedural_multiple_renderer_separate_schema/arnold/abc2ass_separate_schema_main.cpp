@@ -1,5 +1,9 @@
 #include "ArnoldPointsSchemaHandler.h"
 #include "ArnoldPolyMeshSchemaHandler.h"
+#include "ProcArgs.h"
+#include <String2ArgcArgv.h>
+#include <glog/logging.h>
+#include <boost/format.hpp>
 
 void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 								  const StringContainer&       i_hierachy_path,
@@ -45,7 +49,7 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 	}
 }
 
-int main(int argc, char** argv)
+int EmitGeometry(int argc, const char** argv)
 {
     if (argc != 4)
     {
@@ -69,6 +73,67 @@ int main(int argc, char** argv)
     return 0;
 }
 
+int ProcInit( struct AtNode *node, void **user_ptr )
+{
+    ProcArgs * args = new ProcArgs();
+    args->proceduralNode = node;
+
+    const char *parentProceduralDATA = AiNodeGetStr(node,"data");
+    std::cout << boost::format("parentProceduralDATA = '%1%'") % parentProceduralDATA << std::endl;
+
+	std::string param_std_string = (boost::format("dummy %1%") % parentProceduralDATA).str();
+	DLOG(INFO) << boost::format("param_std_string = '%1%'") % param_std_string << std::endl;
+	PI::String2ArgcArgv s2aa(param_std_string);
+
+	EmitGeometry(s2aa.argc(), s2aa.argv());
+
+	if (false){
+		// Do stuff here
+		args->createdNodes.push_back(AiNode("sphere"));
+	}
+
+    *user_ptr = args;
+
+	return true;
+}
+
+int ProcCleanup( void *user_ptr )
+{
+	delete reinterpret_cast<ProcArgs*>( user_ptr );
+
+	return true;
+}
+
+int ProcNumNodes( void *user_ptr )
+{
+    ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+    return (int) args->createdNodes.size();
+}
+
+struct AtNode* ProcGetNode(void *user_ptr, int i)
+{
+    ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+
+    if ( i >= 0 && i < (int) args->createdNodes.size() )
+    {
+        return args->createdNodes[i];
+    }
+
+    return NULL;
+}
+
+extern "C"
+{
+    int ProcLoader(AtProcVtable* api)
+    {
+        api->Init        = ProcInit;
+        api->Cleanup     = ProcCleanup;
+        api->NumNodes    = ProcNumNodes;
+        api->GetNode     = ProcGetNode;
+        strcpy(api->version, AI_VERSION);
+        return 1;
+    }
+}
 // == Emacs ================
 // -------------------------
 // Local variables:
