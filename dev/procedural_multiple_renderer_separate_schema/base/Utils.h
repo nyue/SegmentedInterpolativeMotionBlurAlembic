@@ -4,6 +4,7 @@
 #include <fstream>
 #include <boost/format.hpp>
 #include <Alembic/AbcGeom/All.h>
+#include <glog/logging.h>
 
 bool build_even_motion_relative_time_samples(float                 i_relative_shutter_open,
 											 float                 i_relative_shutter_close,
@@ -97,17 +98,17 @@ bool build_points_for_renderer_from_interim_points(const AlembicPointsDataIndexe
 			if (!previous_point_exists && next_point_exists)
 			{
 				// START frame
-				std::cout << "START frame : points processing" << std::endl;
+				DLOG(INFO) << "START frame : points processing" << std::endl;
 			}
 			else if (previous_point_exists && !next_point_exists)
 			{
 				// END frame
-				std::cout << "END frame : points processing" << std::endl;
+				DLOG(INFO) << "END frame : points processing" << std::endl;
 			}
 			else if (previous_point_exists && next_point_exists)
 			{
 				// INBETWEEN frame
-				std::cout << "INBETWEEN frame : points processing" << std::endl;
+				DLOG(INFO) << "INBETWEEN frame : points processing" << std::endl;
 				size_t interpolated_P_index = 0;
 				size_t num_earlier_sampling_time = earlier_sampling_time_vector.size();
 				size_t num_later_sampling_time = later_sampling_time_vector.size();
@@ -194,12 +195,12 @@ void write_renderer_points_data_to_csv_sequence(const P&		 i_motion_sample_point
 	size_t num_ids = i_ids.size();
 	if ( num_radii != num_elements_per_sample )
 	{
-		std::cerr << boost::format("num_radii = %1% != num_elements_per_sample = %2%") % num_radii % num_elements_per_sample << std::endl;
+		LOG(ERROR) << boost::format("num_radii = %1% != num_elements_per_sample = %2%") % num_radii % num_elements_per_sample << std::endl;
 		return;
 	}
 	if ( num_ids != num_elements_per_sample )
 	{
-		std::cerr << boost::format("num_ids = %1% != num_elements_per_sample = %2%") % num_ids % num_elements_per_sample << std::endl;
+		LOG(ERROR) << boost::format("num_ids = %1% != num_elements_per_sample = %2%") % num_ids % num_elements_per_sample << std::endl;
 		return;
 	}
 	// std::cout << boost::format("num_elements_per_sample = %1%") % num_elements_per_sample << std::endl;

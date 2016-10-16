@@ -4,9 +4,13 @@
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 #include <stdio.h> // required when building as procedural "RunProgram"
+#include <glog/logging.h>
 
 namespace po = boost::program_options;
 
+/*!
+ * \todo Remove the i_level param as this is a procedural
+ */
 void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 								  const StringContainer&       i_hierachy_path,
 								  size_t 					   i_requested_index,
@@ -22,11 +26,11 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 	{
 		std::string child_name =top.getChildHeader(i).getName();
 		for (size_t indent=0;indent<i_level;indent++)
-			std::cout << "  ";
+			DLOG(INFO) << "  ";
 		Alembic::Abc::IObject child(top,child_name);
 		const Alembic::Abc::MetaData &child_md = child.getMetaData();
 		std::string metadata_string = child_md.serialize();
-		std::cout << boost::format("metadata_string='%1%' child_name='%2%'") % metadata_string % child_name;
+		DLOG(INFO) << boost::format("metadata_string='%1%' child_name='%2%'") % metadata_string % child_name;
 		if (Alembic::AbcGeom::IPolyMeshSchema::matches(child_md))
 		{
 			RendermanPolyMeshSchemaHandler apmsh;
@@ -38,7 +42,7 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 			RendermanPointsSchemaHandler apsh;
 			apsh.ProcessPoints(top, child_name, i_hierachy_path, i_requested_index, i_relative_shutter_open, i_relative_shutter_close, num_motion_samples);
 		}
-		std::cout << std::endl;
+		DLOG(INFO) << std::endl;
 		StringContainer       concatenated_hierachy_path = i_hierachy_path;
 		concatenated_hierachy_path.push_back(child_name);
 		locate_geometry_in_hierarchy(child,
@@ -100,11 +104,11 @@ int EmitGeometry(int argc, const char** argv)
 		locate_geometry_in_hierarchy(alembic_archive.getTop(),hierachy_path,frame_to_export,relative_shutter_open,relative_shutter_close,num_motion_samples);
 	}
 	catch(std::exception& e) {
-		std::cerr << "error: " << e.what() << "\n";
+		LOG(ERROR) << "error: " << e.what() << "\n";
 		return 1;
 	}
 	catch(...) {
-		std::cerr << "Exception of unknown type!\n";
+		LOG(ERROR) << "Exception of unknown type!\n";
 	}
 	return 0;
 }
@@ -116,7 +120,7 @@ extern "C" {
 RtPointer ConvertParameters(RtString paramstr)
 {
 	std::string param_std_string = (boost::format("dummy %1%") % paramstr).str();
-	std::cout << boost::format("param_std_string = '%1%'") % param_std_string << std::endl;
+	DLOG(INFO) << boost::format("param_std_string = '%1%'") % param_std_string << std::endl;
 	PI::String2ArgcArgv* s2aa = new PI::String2ArgcArgv(param_std_string);
 
 	/* return the blind data pointer */
@@ -147,13 +151,15 @@ RtVoid Free(RtPointer data)
  */
 int main(int argc, char** argv)
 {
+	google::InitGoogleLogging(argv[0]);
 	RtFloat normalize_pixel_coverage;
+	DLOG(INFO) << boost::format("normalize_pixel_coverage = %1%") % normalize_pixel_coverage;
 	char  args[BUFSIZ];
 
 	while(fgets(args,BUFSIZ,stdin) != NULL) {
 		std::string args_string(args);
 		args_string.erase(std::remove(args_string.begin(), args_string.end(), '\n'), args_string.end());
-		std::cerr << boost::format("args_string = '%1%'") % args_string << std::endl;
+		DLOG(INFO) << boost::format("args_string = '%1%'") % args_string << std::endl;
 		// std::cerr << boost::format("args = '%1%'") % args << std::endl;
 		PI::String2ArgcArgv s2aa(args_string);
 		sscanf(args, "%g", &normalize_pixel_coverage);

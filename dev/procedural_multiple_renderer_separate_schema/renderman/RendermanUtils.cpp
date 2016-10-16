@@ -1,5 +1,6 @@
 #include "RendermanUtils.h"
 #include "Utils.h"
+#include <glog/logging.h>
 
 /*******************************************************************************
  * PolyMesh
@@ -72,8 +73,8 @@ void create_renderman_points_node(const RendermanPointsData& i_renderman_points_
 {
 	Alembic::Abc::uint8_t motion_sample_count = i_renderman_points_data._P_data_array.shape()[0];
 	Alembic::Abc::uint64_t points_count = i_renderman_points_data._P_data_array.shape()[1];
-	std::cout << boost::format("motion_sample_count = %1%") % int(motion_sample_count) << std::endl;
-	std::cout << boost::format("points_count = %1%") % int(points_count) << std::endl;
+	DLOG(INFO) << boost::format("motion_sample_count = %1%") % int(motion_sample_count) << std::endl;
+	DLOG(INFO) << boost::format("points_count = %1%") % int(points_count) << std::endl;
 	bool has_multiple_samples = motion_sample_count > 1;
 	RtInt npoints = i_renderman_points_data._ids_data.size();
 	bool use_constantwidth = i_renderman_points_data._widths_data.size() != i_renderman_points_data._ids_data.size();

@@ -1,4 +1,5 @@
 #include "AbstractPointsSchemaHandler.h"
+#include <glog/logging.h>
 
 AbstractPointsSchemaHandler::AbstractPointsSchemaHandler()
 {
@@ -18,7 +19,7 @@ void AbstractPointsSchemaHandler::ProcessPoints(const Alembic::Abc::IObject& top
 												float          			     i_relative_shutter_close,
 												Alembic::Abc::uint8_t        num_motion_samples) const
 {
-	std::cout << " of type Points";
+	DLOG(INFO) << " of type Points";
     Alembic::AbcGeom::IPoints points(top,child_name);
     Alembic::AbcGeom::IPointsSchema& schema = points.getSchema();
 
@@ -30,29 +31,29 @@ void AbstractPointsSchemaHandler::ProcessPoints(const Alembic::Abc::IObject& top
 		StringContainer       _concatenated_hierachy_path = i_hierachy_path;
 		_concatenated_hierachy_path.push_back(child_name);
 		flatten_string_array(_concatenated_hierachy_path, "_", unique_object_path);
-		std::cout << boost::format(" of type Points, unique_object_path : '%1%'") % unique_object_path << std::endl;
+		DLOG(INFO) << boost::format(" of type Points, unique_object_path : '%1%'") % unique_object_path << std::endl;
 
 		Alembic::AbcGeom::TimeSamplingPtr ts_ptr = points.getSchema().getTimeSampling();
 		Alembic::AbcGeom::TimeSamplingType timeType = ts_ptr->getTimeSamplingType();
 		Alembic::AbcGeom::chrono_t tpc = timeType.getTimePerCycle();
 		// Alembic::AbcGeom::chrono_t fps = 1.0/tpc;
-		// std::cout << boost::format("fps = %1%") % fps << std::endl;
+		// DLOG(INFO) << boost::format("fps = %1%") % fps << std::endl;
 		if ( timeType.isUniform() )
 		{
-    		std::cout << " timeType.isUniform() == true" << std::endl;
+			DLOG(INFO) << " timeType.isUniform() == true" << std::endl;
 			size_t start_frame = ts_ptr->getStoredTimes()[0] / tpc;
-			// std::cout << boost::format("start_frame = %1%") % start_frame << std::endl;
+			// DLOG(INFO) << boost::format("start_frame = %1%") % start_frame << std::endl;
 			std::string renderman_filename = (boost::format("%s.%04d.rib") % unique_object_path % i_requested_index).str();
-    		std::cout << boost::format(" renderman_filename : '%1%'") % renderman_filename << std::endl;
+    		DLOG(INFO) << boost::format(" renderman_filename : '%1%'") % renderman_filename << std::endl;
 			EmitPoints(points,start_frame,i_requested_index,num_motion_samples,i_relative_shutter_open,i_relative_shutter_close);
 		}
 		else if (timeType.isCyclic())
 		{
-    		std::cout << " timeType.isCyclic() == true" << std::endl;
+    		DLOG(INFO) << " timeType.isCyclic() == true" << std::endl;
 		}
 		else if (timeType.isAcyclic())
 		{
-    		std::cout << " timeType.isAcyclic() == true" << std::endl;
+    		DLOG(INFO) << " timeType.isAcyclic() == true" << std::endl;
 		}
 	}
 }

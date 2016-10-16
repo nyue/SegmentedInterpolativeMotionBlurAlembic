@@ -1,5 +1,6 @@
 #include <cfloat>
 #include <boost/format.hpp>
+#include <glog/logging.h>
 #include "Utils.h"
 
 bool build_even_motion_relative_time_samples(float                 i_relative_shutter_open,
@@ -69,7 +70,7 @@ void build_interim_points(const Alembic::AbcGeom::IPointsSchema::Sample* i_sampl
 						Imath::V3f(velocities->get()[positions_index].x,velocities->get()[positions_index].y,velocities->get()[positions_index].z))));
 		if (!ret.second)
 		{
-			std::cerr << "Failed to insert into map" << std::endl;
+			LOG(ERROR) << "Failed to insert into map" << std::endl;
 			return;
 		}
 	}

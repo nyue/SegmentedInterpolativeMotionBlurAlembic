@@ -4,6 +4,7 @@ SET ( SIMBA_DEV_REQUIRED_LINK_LIBRARIES
   ${Ilmbase_IEX_LIBRARY}
   ${HDF5_hdf5_LIBRARY}
   ${HDF5_hdf5_hl_LIBRARY}
+  ${GLOG_glog_LIBRARY}
   )
 
 ADD_EXECUTABLE ( query_alembic

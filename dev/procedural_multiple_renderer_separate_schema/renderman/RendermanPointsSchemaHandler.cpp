@@ -1,6 +1,7 @@
 #include "RendermanPointsSchemaHandler.h"
 #include "RendermanUtils.h"
 #include "Utils.h"
+#include <glog/logging.h>
 
 RendermanPointsSchemaHandler::RendermanPointsSchemaHandler()
 {
@@ -24,7 +25,7 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     size_t num_samples = points.getSchema().getNumSamples();
     size_t last_sample_index = num_samples - 1;
     Alembic::Abc::int64_t requested_index = i_requested_frame_number - i_start_frame_number;
-    std::cout << boost::format("num_samples = %1% i_requested_frame_number = %2% requested_index = %3% last_sample_index = %4%") % num_samples % i_requested_frame_number % requested_index % last_sample_index << std::endl;
+    DLOG(INFO) << boost::format("num_samples = %1% i_requested_frame_number = %2% requested_index = %3% last_sample_index = %4%") % num_samples % i_requested_frame_number % requested_index % last_sample_index << std::endl;
     if (requested_index < 0 || requested_index > (num_samples-1))
     	return;
 
@@ -94,7 +95,7 @@ void RendermanPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     }
     else
     {
-    	std::cout << "NICHOLAS XXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
+    	DLOG(INFO) << "NICHOLAS XXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
     	Alembic::Abc::ISampleSelector previous_sample_selector(requested_index-1);
 
         Alembic::AbcGeom::IPointsSchema::Sample previous_sample;

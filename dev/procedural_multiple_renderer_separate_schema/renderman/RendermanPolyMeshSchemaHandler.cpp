@@ -1,6 +1,7 @@
 #include "RendermanPolyMeshSchemaHandler.h"
 #include "RendermanUtils.h"
 #include "Utils.h"
+#include <glog/logging.h>
 
 RendermanPolyMeshSchemaHandler::RendermanPolyMeshSchemaHandler()
 {
@@ -24,7 +25,7 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
     size_t num_samples = pmesh.getSchema().getNumSamples();
     size_t last_sample_index = num_samples - 1;
     Alembic::Abc::int64_t requested_index = i_requested_frame_number - i_start_frame_number - 1;
-    std::cout << boost::format("num_samples = %1% i_requested_frame_number = %2% requested_index = %3% last_sample_index = %4%") % num_samples % i_requested_frame_number % requested_index % last_sample_index << std::endl;
+    DLOG(INFO) << boost::format("num_samples = %1% i_requested_frame_number = %2% requested_index = %3% last_sample_index = %4%") % num_samples % i_requested_frame_number % requested_index % last_sample_index << std::endl;
     if (requested_index < 0 || requested_index > (num_samples-1))
     	return;
 
@@ -82,7 +83,7 @@ void RendermanPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& p
     	Alembic::Abc::int64_t next_index = requested_index + 1;
     	Alembic::Abc::ISampleSelector previous_sample_selector(previous_index);
     	Alembic::Abc::ISampleSelector next_sample_selector(next_index);
-    	std::cout << boost::format("previous_index = %1% requested_index = %2% next_index = %3%") % previous_index % requested_index % next_index << std::endl;
+    	DLOG(INFO) << boost::format("previous_index = %1% requested_index = %2% next_index = %3%") % previous_index % requested_index % next_index << std::endl;
         Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
     	pmesh.getSchema().get( next_sample, next_sample_selector );
 
@@ -153,7 +154,7 @@ void RendermanPolyMeshSchemaHandler::build_polymesh_for_renderman_rib(const Alem
 	if ( i_motion_sample_count == 1)
 	{
 		// Special case, return single time step from current sample
-		std::cout << boost::format("num_nsides=%1% num_indices=%2% num_P=%3%") % num_nsides % num_indices % current_num_P << std::endl;
+		DLOG(INFO) << boost::format("num_nsides=%1% num_indices=%2% num_P=%3%") % num_nsides % num_indices % current_num_P << std::endl;
 		o_renderman_mesh._P_data_array.resize(boost::extents[i_motion_sample_count][current_num_P]);
 		for (size_t index=0;index<current_num_P;index++)
 		{
@@ -167,7 +168,7 @@ void RendermanPolyMeshSchemaHandler::build_polymesh_for_renderman_rib(const Alem
 
 	if (i_previous_sample && i_next_sample)
 	{
-		std::cout << "INTERPOLATE INBETWEEN" << std::endl;
+		DLOG(INFO) << "INTERPOLATE INBETWEEN" << std::endl;
 
 		Alembic::AbcGeom::P3fArraySamplePtr previous_P = i_previous_sample->getPositions();
 		Alembic::AbcGeom::V3fArraySamplePtr previous_v = i_previous_sample->getVelocities();
@@ -219,9 +220,9 @@ void RendermanPolyMeshSchemaHandler::build_polymesh_for_renderman_rib(const Alem
 					Imath::Vec3<float> T2(current_v->get()[index].x,current_v->get()[index].y,current_v->get()[index].z);
 					Imath::Vec3<float> P;
 					float s = 1+(*tsIter);
-					std::cout << boost::format("EARLIER s = %1%") % s << std::endl;
+					DLOG(INFO) << boost::format("EARLIER s = %1%") % s << std::endl;
 					interpolate<float>(P1,T1,P2,T2,s,P);
-					std::cout << boost::format("Earlier [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
+					DLOG(INFO) << boost::format("Earlier [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
 
 
 					o_renderman_mesh._P_data_array[sampling_index][index].x = P.x;
@@ -233,7 +234,7 @@ void RendermanPolyMeshSchemaHandler::build_polymesh_for_renderman_rib(const Alem
 
 			}
 
-			std::cout << "Earlier/Later =================================" << std::endl;
+			DLOG(INFO) << "Earlier/Later =================================" << std::endl;
 
 			// LATER
 			tsIter = later_sampling_time_vector.begin();
@@ -249,9 +250,9 @@ void RendermanPolyMeshSchemaHandler::build_polymesh_for_renderman_rib(const Alem
 					Imath::Vec3<float> T2(next_v->get()[index].x,next_v->get()[index].y,next_v->get()[index].z);
 					Imath::Vec3<float> P;
 					float s = *tsIter;
-					// std::cout << boost::format("s = %1%") % s << std::endl;
+					// DLOG(INFO) << boost::format("s = %1%") % s << std::endl;
 					interpolate<float>(P1,T1,P2,T2,s,P);
-					std::cout << boost::format("Later [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
+					DLOG(INFO) << boost::format("Later [sampling_index = %1%] P1 = %2%, T1 = %3%, P2 = %4%, T2 = %5% [s = %6%] {P =%7%}") % sampling_index % P1 % T1 % P2 % T2 % s % P << std::endl;
 
 
 					o_renderman_mesh._P_data_array[sampling_index][index].x = P.x;
@@ -265,11 +266,11 @@ void RendermanPolyMeshSchemaHandler::build_polymesh_for_renderman_rib(const Alem
 	}
 	else if ((i_previous_sample == 0) && i_next_sample)
 	{
-		std::cout << "INTERPOLATE FIRST FRAME" << std::endl;
+		DLOG(INFO) << "INTERPOLATE FIRST FRAME" << std::endl;
 	}
 	else if (i_previous_sample && (i_next_sample == 0))
 	{
-		std::cout << "INTERPOLATE LAST FRAME" << std::endl;
+		DLOG(INFO) << "INTERPOLATE LAST FRAME" << std::endl;
 	}
 
 
