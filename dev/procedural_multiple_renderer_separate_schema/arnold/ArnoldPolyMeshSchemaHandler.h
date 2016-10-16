@@ -1,9 +1,10 @@
 #pragma once
 
 #include "AbstractPolyMeshSchemaHandler.h"
+#include "ArnoldGeomSchemaHandler.h"
 #include "ArnoldTypes.h"
 
-class ArnoldPolyMeshSchemaHandler : public AbstractPolyMeshSchemaHandler
+class ArnoldPolyMeshSchemaHandler : public ArnoldGeomSchemaHandler, public AbstractPolyMeshSchemaHandler
 {
 
 public:

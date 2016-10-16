@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Types.h"
 #include <ai.h>
 #include <vector>
-#include "Types.h"
+#include <boost/shared_ptr.hpp>
 
 typedef std::vector<AtUInt32> AtUInt32Container;
 typedef std::vector<AtUInt64> AtUInt64Container;
@@ -21,6 +22,9 @@ struct ArnoldPointsData
 	AtUInt64Container _ids_data;
 	FloatContainer _radius_data;
 };
+
+typedef std::vector<struct AtNode *> AtNodePtrContainer;
+typedef boost::shared_ptr<AtNodePtrContainer> AtNodePtrContainerSharedPtr;
 
 // == Emacs ================
 // -------------------------

@@ -4,10 +4,10 @@
 #include <Alembic/AbcGeom/All.h>
 
 // PolyMesh
-void create_arnold_polymesh_node(const std::string&    name,
-								 const ArnoldMeshData& i_arnold_mesh_data,
-								 float                 i_shutter_open,
-								 float                 i_shutter_close);
+const AtNode* create_arnold_polymesh_node(const std::string&    name,
+										  const ArnoldMeshData& i_arnold_mesh_data,
+										  float                 i_shutter_open,
+										  float                 i_shutter_close);
 
 void emit_arnold_mesh_data(const ArnoldMeshData& i_arnold_mesh_data,
 									float 				  i_shutter_open,
@@ -23,10 +23,10 @@ void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold
 
 // Points
 
-void create_arnold_points_node(const std::string&    name,
-								 const ArnoldPointsData& i_arnold_points_data,
-								 float                 i_shutter_open,
-								 float                 i_shutter_close);
+const AtNode* create_arnold_points_node(const std::string&      name,
+										const ArnoldPointsData& i_arnold_points_data,
+										float                   i_shutter_open,
+										float                   i_shutter_close);
 void emit_arnold_points_data(const ArnoldPointsData& i_arnold_points_data,
 									  float 				  i_shutter_open,
 									  float 				  i_shutter_close,

@@ -8,14 +8,14 @@
 // Arnold PolyMesh
 // =============================================================================
 
-void create_arnold_polymesh_node(const std::string&    name,
-								 const ArnoldMeshData& i_arnold_mesh_data,
-								 float                 i_shutter_open,
-								 float                 i_shutter_close)
+const AtNode * create_arnold_polymesh_node(const std::string&    name,
+										   const ArnoldMeshData& i_arnold_mesh_data,
+										   float                 i_shutter_open,
+										   float                 i_shutter_close)
 {
 	AtByte nkeys = i_arnold_mesh_data._vlist_data_array.size();
 	if (nkeys<1)
-		return;
+		return NULL;
 	// Assumes topological stability
 	AtUInt32 nelements = i_arnold_mesh_data._vlist_data_array[0].size();
 	// name
@@ -37,6 +37,7 @@ void create_arnold_polymesh_node(const std::string&    name,
 	float deform_time_samples[2] = {i_shutter_open,i_shutter_close};
 	AiNodeSetArray(polymesh, "deform_time_samples", AiArrayConvert(2,1,AI_TYPE_FLOAT,deform_time_samples));
 
+	return polymesh;
 }
 
 void emit_arnold_mesh_data(const ArnoldMeshData& i_arnold_mesh_data,
@@ -127,14 +128,14 @@ void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold
 // Arnold Points
 // =============================================================================
 
-void create_arnold_points_node(const std::string&    name,
-								 const ArnoldPointsData& i_arnold_points_data,
-								 float                 i_shutter_open,
-								 float                 i_shutter_close)
+const AtNode* create_arnold_points_node(const std::string&      name,
+										const ArnoldPointsData& i_arnold_points_data,
+										float                   i_shutter_open,
+										float                   i_shutter_close)
 {
 	AtByte nkeys = i_arnold_points_data._points_data_array.size();
 	if (nkeys<1)
-		return;
+		return NULL;
 	// Assumes topological stability
 	AtUInt32 nelements = i_arnold_points_data._points_data_array[0].size();
 	// name
@@ -152,6 +153,8 @@ void create_arnold_points_node(const std::string&    name,
 	// deform_time_samples
 	float deform_time_samples[2] = {i_shutter_open,i_shutter_close};
 	AiNodeSetArray(points, "deform_time_samples", AiArrayConvert(2,1,AI_TYPE_FLOAT,deform_time_samples));
+
+	return points;
 }
 
 void emit_arnold_points_data(const ArnoldPointsData& i_arnold_points_data,

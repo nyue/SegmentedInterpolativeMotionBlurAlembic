@@ -1,8 +1,9 @@
 #pragma once
 
 #include "AbstractPointsSchemaHandler.h"
+#include "ArnoldGeomSchemaHandler.h"
 
-class ArnoldPointsSchemaHandler : public AbstractPointsSchemaHandler
+class ArnoldPointsSchemaHandler : public ArnoldGeomSchemaHandler, public AbstractPointsSchemaHandler
 {
 public:
 	ArnoldPointsSchemaHandler();

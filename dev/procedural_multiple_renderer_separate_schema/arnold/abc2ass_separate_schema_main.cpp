@@ -49,7 +49,7 @@ void locate_geometry_in_hierarchy(const Alembic::Abc::IObject& top,
 	}
 }
 
-int EmitGeometry(int argc, const char** argv)
+int EmitGeometry(int argc, const char** argv /* put the AtNodes* container here*/)
 {
     if (argc != 4)
     {
