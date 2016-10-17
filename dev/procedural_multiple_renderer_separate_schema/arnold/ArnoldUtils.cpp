@@ -8,7 +8,7 @@
 // Arnold PolyMesh
 // =============================================================================
 
-const AtNode * create_arnold_polymesh_node(const std::string&    name,
+struct AtNode * create_arnold_polymesh_node(const std::string&    name,
 										   const ArnoldMeshData& i_arnold_mesh_data,
 										   float                 i_shutter_open,
 										   float                 i_shutter_close)
@@ -43,13 +43,15 @@ const AtNode * create_arnold_polymesh_node(const std::string&    name,
 void emit_arnold_mesh_data(const ArnoldMeshData& i_arnold_mesh_data,
 						   float 				 i_shutter_open,
 						   float 				 i_shutter_close,
+							 AtNodePtrContainer&     o_created_nodes,
 						   const char*           i_arnold_filename)
 {
 	if (i_arnold_filename)
 		// start an Arnold session
 		AiBegin();
 
-	create_arnold_polymesh_node("test",i_arnold_mesh_data,i_shutter_open,i_shutter_close);
+	struct AtNode* node = create_arnold_polymesh_node("test",i_arnold_mesh_data,i_shutter_open,i_shutter_close);
+	o_created_nodes.push_back(node);
 
 	if (i_arnold_filename)
 	{
@@ -128,7 +130,7 @@ void write_arnold_mesh_data_to_wavefront_sequence(const ArnoldMeshData& i_arnold
 // Arnold Points
 // =============================================================================
 
-const AtNode* create_arnold_points_node(const std::string&      name,
+struct AtNode* create_arnold_points_node(const std::string&      name,
 										const ArnoldPointsData& i_arnold_points_data,
 										float                   i_shutter_open,
 										float                   i_shutter_close)
@@ -160,6 +162,7 @@ const AtNode* create_arnold_points_node(const std::string&      name,
 void emit_arnold_points_data(const ArnoldPointsData& i_arnold_points_data,
 							 float 				     i_shutter_open,
 							 float 				     i_shutter_close,
+							 AtNodePtrContainer&     o_created_nodes,
 							 const char*             i_arnold_filename)
 {
 	if (i_arnold_filename)
@@ -167,7 +170,8 @@ void emit_arnold_points_data(const ArnoldPointsData& i_arnold_points_data,
 		AiBegin();
 
 
-	create_arnold_points_node("test",i_arnold_points_data,i_shutter_open,i_shutter_close);
+	struct AtNode* node = create_arnold_points_node("test",i_arnold_points_data,i_shutter_open,i_shutter_close);
+	o_created_nodes.push_back(node);
 
 	if (i_arnold_filename)
 	{

@@ -58,7 +58,8 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		arnold_points_data._radius_data);
     	emit_arnold_points_data(arnold_points_data,
     							i_relative_shutter_open,
-								i_relative_shutter_close);
+								i_relative_shutter_close,
+								*(this->_nodes));
 
     }
     else if (requested_index == last_sample_index)
@@ -84,7 +85,8 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
 																		arnold_points_data._radius_data);
     	emit_arnold_points_data(arnold_points_data,
     							i_relative_shutter_open,
-								i_relative_shutter_close);
+								i_relative_shutter_close,
+								*(this->_nodes));
 
     }
     else
@@ -123,7 +125,8 @@ void ArnoldPointsSchemaHandler::EmitPoints(Alembic::AbcGeom::IPoints& points,
     	// write_arnold_points_data_to_csv_sequence(arnold_points_data,"points_per_sample.%04d.csv");
     	emit_arnold_points_data(arnold_points_data,
     							i_relative_shutter_open,
-								i_relative_shutter_close);
+								i_relative_shutter_close,
+								*(this->_nodes));
 
     }
 

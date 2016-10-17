@@ -50,7 +50,8 @@ void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmes
 									  arnold_mesh_data);
     	emit_arnold_mesh_data(arnold_mesh_data,
     						  i_relative_shutter_open,
-							  i_relative_shutter_close);
+							  i_relative_shutter_close,
+								*(this->_nodes));
 
     }
     else if (requested_index == last_sample_index)
@@ -71,7 +72,8 @@ void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmes
 									  arnold_mesh_data);
     	emit_arnold_mesh_data(arnold_mesh_data,
     						  i_relative_shutter_open,
-							  i_relative_shutter_close);
+							  i_relative_shutter_close,
+								*(this->_nodes));
 
     }
     else
@@ -103,7 +105,8 @@ void ArnoldPolyMeshSchemaHandler::EmitPolyMesh(Alembic::AbcGeom::IPolyMesh& pmes
 									  arnold_mesh_data);
     	emit_arnold_mesh_data(arnold_mesh_data,
     						  i_relative_shutter_open,
-							  i_relative_shutter_close);
+							  i_relative_shutter_close,
+								*(this->_nodes));
     	// write_arnold_mesh_data_to_wavefront_sequence(arnold_mesh_data,"mesh_per_sample.%04d.obj");
     }
 

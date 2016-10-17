@@ -12,6 +12,7 @@ TARGET_LINK_LIBRARIES ( procedural_multiple_renderer_separate_schema_arnold
   ProceduralSimbaBase
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
   ${Arnold_ai_LIBRARY}
+  ${Boost_LIBRARIES}
   )
 
 SET_TARGET_PROPERTIES ( procedural_multiple_renderer_separate_schema_arnold

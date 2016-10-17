@@ -9,13 +9,12 @@
 class ArnoldGeomSchemaHandler
 {
 public:
-	ArnoldGeomSchemaHandler() {}
+	ArnoldGeomSchemaHandler() : _nodes(0){}
 	virtual ~ArnoldGeomSchemaHandler() {}
-	void set_nodes(const AtNodePtrContainerSharedPtr & i_nodes) { _nodes = i_nodes; }
-	AtNodePtrContainerSharedPtr get_nodes() { return _nodes; }
-	const AtNodePtrContainerSharedPtr get_nodes() const { return _nodes; }
+	void set_created_nodes_container(AtNodePtrContainer* i_nodes) { _nodes = i_nodes; }
+	AtNodePtrContainer* get_created_nodes_container() { return _nodes; }
 protected:
-	AtNodePtrContainerSharedPtr _nodes;
+	AtNodePtrContainer* _nodes;
 };
 
 // == Emacs ================
