@@ -45,7 +45,7 @@ IF (OLD_DEVELOPMENT)
   ADD_SUBDIRECTORY ( abc2ass_monolithic )
   ADD_SUBDIRECTORY ( abc2ass_separate_schema )
   ADD_SUBDIRECTORY ( multiple_renderer_separate_schema )
-ENDIF (OLD_DEVELOPMENNT)
+ENDIF ()
 
 ADD_SUBDIRECTORY ( velocities_sidecar )
 ADD_SUBDIRECTORY ( procedural_multiple_renderer_separate_schema )
