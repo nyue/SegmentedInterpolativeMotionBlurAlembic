@@ -15,6 +15,8 @@
 #include <boost/program_options.hpp>
 #include <OpenEXR/ImathVec.h>
 
+#include <cryptopp/sha.h>
+
 #include "VelocitySideCar.h"
 
 namespace po = boost::program_options;
