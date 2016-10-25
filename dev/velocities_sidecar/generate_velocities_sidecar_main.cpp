@@ -15,20 +15,27 @@
 #include <boost/program_options.hpp>
 #include <OpenEXR/ImathVec.h>
 
-#include <cryptopp/sha.h>
-#include <cryptopp/hex.h>
-#include <cryptopp/files.h>
-
 #include "VelocitySideCar.h"
 
 namespace po = boost::program_options;
 
-void get_sha(const std::string& i_filename, std::string& o_sha)
+Alembic::AbcGeom::OXform
+addXform(Alembic::Abc::OObject parent, std::string name)
 {
-	CryptoPP::SHA1 hash;
-	CryptoPP::FileSource(i_filename.c_str(),true,
-			new CryptoPP::HashFilter(hash, new CryptoPP::HexEncoder(
-					new CryptoPP::StringSink(o_sha), true)));
+        Alembic::AbcGeom::OXform xform(parent, name.c_str());
+
+        return xform;
+}
+
+void write_velocities_sidecar(const std::string& i_filename, const VelocitySideCar& i_vsc)
+{
+	Alembic::Abc::OArchive archive(Alembic::Abc::CreateArchiveWithInfo(Alembic::AbcCoreHDF5::WriteArchive(),
+			std::string(i_filename.c_str()),
+			std::string("Procedural Insight"),
+			std::string("SIMBA Velocity Sidecar"),
+			Alembic::Abc::ErrorHandler::kThrowPolicy));
+	Alembic::AbcGeom::OXform xform = addXform(archive.getTop(),"Xform");
+
 }
 
 int main(int argc, char** argv)
@@ -54,9 +61,13 @@ int main(int argc, char** argv)
 			return 1;
 		}
 
-		std::string sha;
-		get_sha(alembic_file, sha);
-		std::cout << boost::format("sha = '%1%'") % sha << std::endl;
+//		std::string sha;
+//		get_sha(alembic_file, sha);
+//		std::cout << boost::format("sha = '%1%'") % sha << std::endl;
+
+		VelocitySideCar vsc;
+
+		vsc.compute(alembic_file);
 
 	}
 	catch(std::exception& e) {
