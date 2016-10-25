@@ -17,6 +17,8 @@
 #include <Alembic/AbcCollection/All.h>
 #include <Alembic/AbcMaterial/All.h>
 
+#include <boost/shared_ptr.hpp>
+
 class VelocitySideCar
 {
 	typedef std::vector<std::string> PathList;
@@ -41,6 +43,8 @@ private:
 						 PathList::const_iterator          I,
 						 PathList::const_iterator          E);
 	void TokenizePath( const std::string &path, PathList& result ) const;
+private:
+	boost::shared_ptr<Alembic::Abc::IArchive> _archive_ptr;
 };
 
 void compute_sha(const std::string& i_filename, std::string& o_sha);

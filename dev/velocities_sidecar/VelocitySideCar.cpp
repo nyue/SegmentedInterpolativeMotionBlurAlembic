@@ -23,10 +23,9 @@ bool VelocitySideCar::compute(const std::string& i_alembic_source, const std::st
 
 	Alembic::AbcCoreFactory::IFactory factory;
 	Alembic::AbcCoreFactory::IFactory::CoreType oType;
-	Alembic::Abc::IArchive archive(factory.getArchive(i_alembic_source, oType));
+	_archive_ptr.reset(new Alembic::Abc::IArchive(factory.getArchive(i_alembic_source, oType)));
 
-
-    Alembic::Abc::IObject top = archive.getTop();
+    Alembic::Abc::IObject top = _archive_ptr->getTop();
 
     size_t top_num_children = top.getNumChildren();
     std::cout << "top_num_children = " << top_num_children << std::endl;
@@ -47,6 +46,11 @@ bool VelocitySideCar::compute(const std::string& i_alembic_source, const std::st
 void VelocitySideCar::ProcessIPolyMesh(const Alembic::AbcGeom::IPolyMesh& i_polymesh,
 		  	  	  	  	  	  	  	   const std::string&                 i_regex_pattern)
 {
+
+//	Alembic::Abc::ISampleSelector next_sample_selector(requested_index+1);
+//
+//    Alembic::AbcGeom::IPolyMeshSchema::Sample next_sample;
+//	pmesh.getSchema().get( next_sample, next_sample_selector );
 
 }
 
