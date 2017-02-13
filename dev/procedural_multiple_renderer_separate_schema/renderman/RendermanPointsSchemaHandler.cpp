@@ -1,7 +1,7 @@
 #include "RendermanPointsSchemaHandler.h"
 #include "RendermanUtils.h"
 #include "Utils.h"
-#include <logging.h>
+#include <simba_logging.h>
 
 RendermanPointsSchemaHandler::RendermanPointsSchemaHandler()
 {
