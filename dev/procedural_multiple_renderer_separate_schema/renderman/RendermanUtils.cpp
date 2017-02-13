@@ -43,7 +43,7 @@ void emit_renderman_mesh_data(const RendermanMeshData& i_renderman_mesh_data,
 							  const char*              i_renderman_filename)
 {
 	if (i_renderman_filename)
-		RiBegin(i_renderman_filename);
+		RiBegin(const_cast<char*>(i_renderman_filename));
 
 	create_renderman_polymesh_node(i_renderman_mesh_data,i_shutter_open,i_shutter_close);
 
@@ -119,7 +119,7 @@ void emit_renderman_points_data(const RendermanPointsData& i_renderman_points_da
 								const char*                i_renderman_filename)
 {
 	if (i_renderman_filename)
-		RiBegin(i_renderman_filename);
+		RiBegin(const_cast<char*>(i_renderman_filename));
 
 	create_renderman_points_node(i_renderman_points_data,i_shutter_open,i_shutter_close);
 

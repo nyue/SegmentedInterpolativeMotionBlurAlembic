@@ -10,5 +10,5 @@ ADD_EXECUTABLE ( multiple_renderer_separate_schema_renderman
 TARGET_LINK_LIBRARIES ( multiple_renderer_separate_schema_renderman
   SimbaBase
   ${SIMBA_DEV_REQUIRED_LINK_LIBRARIES}
-  ${DELIGHT_3delight_LIBRARY}
+  ${SIMBA_RENDERMAN_LINK_LIBRARIES}
   )
