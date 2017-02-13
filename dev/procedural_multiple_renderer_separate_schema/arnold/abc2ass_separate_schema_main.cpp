@@ -2,7 +2,7 @@
 #include "ArnoldPolyMeshSchemaHandler.h"
 #include "ProcArgs.h"
 #include <String2ArgcArgv.h>
-#include <glog/logging.h>
+#include <logging.h>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 

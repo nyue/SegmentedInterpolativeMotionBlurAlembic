@@ -4,7 +4,7 @@
 #include <fstream>
 #include <boost/format.hpp>
 #include <Alembic/AbcGeom/All.h>
-#include <glog/logging.h>
+#include <logging.h>
 
 bool build_even_motion_relative_time_samples(float                 i_relative_shutter_open,
 											 float                 i_relative_shutter_close,

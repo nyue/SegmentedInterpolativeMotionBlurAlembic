@@ -1,6 +1,6 @@
 #include "RendermanUtils.h"
 #include "Utils.h"
-#include <glog/logging.h>
+#include <logging.h>
 
 /*******************************************************************************
  * PolyMesh

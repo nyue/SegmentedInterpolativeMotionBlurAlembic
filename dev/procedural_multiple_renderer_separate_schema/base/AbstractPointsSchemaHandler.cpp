@@ -1,5 +1,5 @@
 #include "AbstractPointsSchemaHandler.h"
-#include <glog/logging.h>
+#include <logging.h>
 
 AbstractPointsSchemaHandler::AbstractPointsSchemaHandler()
 {

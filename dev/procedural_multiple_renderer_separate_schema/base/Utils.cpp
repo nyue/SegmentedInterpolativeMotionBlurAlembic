@@ -1,6 +1,6 @@
 #include <cfloat>
 #include <boost/format.hpp>
-#include <glog/logging.h>
+#include <logging.h>
 #include "Utils.h"
 
 bool build_even_motion_relative_time_samples(float                 i_relative_shutter_open,

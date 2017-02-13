@@ -4,7 +4,7 @@
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 #include <stdio.h> // required when building as procedural "RunProgram"
-#include <glog/logging.h>
+#include <logging.h>
 
 namespace po = boost::program_options;
 
