@@ -1,5 +1,5 @@
 #include "AbstractPointsSchemaHandler.h"
-#include <logging.h>
+#include <simba_logging.h>
 
 AbstractPointsSchemaHandler::AbstractPointsSchemaHandler()
 {
